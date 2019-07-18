@@ -131,3 +131,5 @@ plot    '/tmp/first' u (1):($2+$3) w boxplot lc "red" notitle, \
         '/tmp/second' u (2):($2+$3) w boxplot lc "blue" notitle
 
 EOF
+
+sudo cp /tmp/compare.png /run/dump1090-fa/compare.png
