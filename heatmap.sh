@@ -21,7 +21,7 @@ while (( SECONDS < secs )); do
 done
 
 echo "Number of data points collected:"
-wc -l /tmp/heatmap
+wc -l ./heatmap
 
 gnuplot -c /dev/stdin $lat $lon $date <<"EOF"
 
