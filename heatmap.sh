@@ -20,6 +20,16 @@ while (( SECONDS < secs )); do
         sleep $2
 done
 
+if [[ $1 == "-1" ]]; then
+	for i in /run/timelapse1090/chunk_*.gz; do
+		echo $i
+		zcat $i | jq -r '.files | .[] | .aircraft | .[] | select(.lat != null) | select (.lon !=null) | [.lon,.lat,.rssi] | @csv' >>heatmap
+	done
+	for i in /run/timelapse1090/history_*.json; do
+		sed -e '$d' $i | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | [.lon,.lat,.rssi] | @csv' >> heatmap
+	done
+fi
+
 echo "Number of data points collected:"
 wc -l ./heatmap
 
