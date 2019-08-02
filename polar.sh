@@ -98,6 +98,11 @@ set colorbox user vertical origin 0.9, 0.80 size 0.02, 0.15
 
 show angles
 set size square
+set xrange [-300:300]
+set yrange [-300:300]
+set rtics 50
+set xtics 50
+set ytics 50
 
 set title "Signal Heatmap ".date tc rgb "white"
 print "Generating all altitudes heatmap..."
@@ -117,6 +122,8 @@ set title "Signal Heatmap aircraft below ".low." feet - ".date tc rgb "white"
 print "Generating low altitude heatmap..."
 set xrange [-120:120]
 set yrange [-120:120]
+set xtics 25
+set ytics 25
 
 plot '/tmp/heatmap_low' u ($6):($5/1852):($3) with dots lc palette
 
