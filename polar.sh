@@ -122,6 +122,7 @@ set title "Signal Heatmap aircraft below ".low." feet - ".date tc rgb "white"
 print "Generating low altitude heatmap..."
 set xrange [-120:120]
 set yrange [-120:120]
+set rtics 25
 set xtics 25
 set ytics 25
 
