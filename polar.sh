@@ -150,6 +150,26 @@ print "Generating elevation heatmap..."
 
 plot 'polarheatmap' u ($6):($7):($3) with dots lc palette
 
+set output 'altgraph-'.date.'.png'
+
+set cblabel "RSSI" tc rgb "white"
+set palette rgb 34,35,36
+set colorbox user vertical origin 0.9, 0.1 size 0.02, 0.15
+
+
+set title "Range/Altitude" tc rgb "white"
+set xrange [0:*]
+set yrange [0:45000]
+set xtics 25
+set ytics 5000
+
+f(x) = (x**2 / 1.5129) - (rh * 3.3)
+
+print "Generating Range/Altitude plot..."
+
+plot 'polarheatmap-2019-08-02' u ($5/1852):($4):($3) with dots lc palette, f(x) lt rgb "white" notitle
+
+
 EOF
 
 rm /tmp/heatmap_*
@@ -159,3 +179,16 @@ sudo cp polarheatmap-$date.png /run/dump1090-fa/heatmap.png
 sudo cp polarheatmap_low-$date.png /run/dump1090-fa/heatmap_low.png
 sudo cp polarheatmap_high-$date.png /run/dump1090-fa/heatmap_high.png
 sudo cp elevation-$date.png /run/dump1090-fa/elevation.png
+sudo cp altgraph-$date.png /run/dump1090-fa/altgraph.png
+
+IP=$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
+
+echo "The following graphs are now available:"
+echo "http://$IP/dump1090-fa/data/heatmap.png"
+echo "http://$IP/dump1090-fa/data/heatmap_low.png"
+echo "http://$IP/dump1090-fa/data/heatmap_high.png"
+echo "http://$IP/dump1090-fa/data/elevation.png"
+echo "http://$IP/dump1090-fa/data/altgraph.png"
+
+
+
