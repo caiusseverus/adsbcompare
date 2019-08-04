@@ -173,7 +173,7 @@ f(x) = (x**2 / 1.5129) - (rh * 3.3)
 
 print "Generating Range/Altitude plot..."
 
-plot 'polarheatmap-2019-08-02' u ($5/1852):($4):($3) with dots lc palette, f(x) lt rgb "white" notitle
+plot 'polarheatmap' u ($5/1852):($4):($3) with dots lc palette, f(x) lt rgb "white" notitle
 
 
 EOF
