@@ -10,6 +10,10 @@ rh=0
 low=5000
 high=25000
 
+#Set maximum plot range in nm
+
+range=230
+
 
 let "secs=$1 * 60"
 int=$2
@@ -69,13 +73,15 @@ echo "Filtering altitudes"
 awk -v low="$low" -F "," '$4 <= low' polarheatmap > /tmp/heatmap_low
 awk -v high="$high" -F "," '$4 >= high' polarheatmap > /tmp/heatmap_high
 
-gnuplot -c /dev/stdin $lat $lon $date $low $high<<"EOF"
+gnuplot -c /dev/stdin $lat $lon $date $low $high $rh $range <<"EOF"
 
 lat=ARG1
 lon=ARG2
 date=ARG3
 low=ARG4
 high=ARG5
+rh=ARG6
+range=ARG7
 
 set terminal pngcairo enhanced size 2000,2000
 set datafile separator comma
@@ -98,8 +104,8 @@ set colorbox user vertical origin 0.9, 0.80 size 0.02, 0.15
 
 show angles
 set size square
-set xrange [-300:300]
-set yrange [-300:300]
+set xrange [-range:range]
+set yrange [-range:range]
 set rtics 50
 set xtics 50
 set ytics 50
