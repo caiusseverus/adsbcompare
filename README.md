@@ -51,6 +51,10 @@ Example output:
 
 ![polarheatmap](polarheatmap.png)
 
+![polarheatmap_high](polarheatmap_high.png)
+
+![polarheatmap_low](polarheatmap_low.png)
+
 ![altidues](altgraph.png)
 
 ## altitudes.sh
