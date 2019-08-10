@@ -43,7 +43,7 @@ bash polar.sh -1
 
 If run directly on the pi collecting data, local data will be used. If run on a separate machine, it will attempt to retrieve the data from the pi specified at the top of the script and then generate the graphs.
 This is recommended if plotting long periods and short intervals due to the large number of data points generated.
-Data collected is saved in the format polarheatmap-<date>.
+Data collected is saved in a file similar to polarheatmap-2019-08-05.
 
 Example output:
 
