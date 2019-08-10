@@ -25,9 +25,9 @@ It collects aircraft positions, altitudes and signal strengths, and then calcula
 Points are coloured by signal strength, and can be used to help identify receiver blindspots or terrain limitations.
 Plots produced include:
 
-Azimuth/Elevation plot
-Position/Signal strength heatmaps for high, low, and all altitudes
-Range/Altitude plot
+* Azimuth/Elevation plot.
+* Position/Signal strength heatmaps for high, low, and all altitudes.
+* Range/Altitude plot.
 
 To collect live data give the first argument as duration in minutes, and the second as the interval in seconds between samples:
 You need to set your receiver location and height in metres at the top of the script prior to running.
