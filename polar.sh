@@ -22,7 +22,7 @@ pi=raspberrypi
 
 un=pi
 
-#Set heywhatsthat.com site ID here:
+#Set heywhatsthat.com site ID here - Note that the script will not run without it. If you want to use a new ID, delete any existing upintheair.json first
 
 hwt=
 
@@ -36,6 +36,7 @@ PWD=$(pwd)
 archiveloc=/run/timelapse1090
 TMPDIR=$(mktemp -d)
 HWTDIR=$(mktemp -d)
+hwth=$(($rh +1))
 
 if [ -z "$hwt" ]; then
         echo "Please set your HeyWhatsThat ID before running this script"
@@ -153,7 +154,7 @@ if [ ! -f "$file" ]; then
 
 
   echo "Retrieving terrain profiles from heywhatsthat.com:"
-  curl "http://www.heywhatsthat.com/api/upintheair.json?id=${hwt}&refraction=0.0&alts=50,606,1212,1818,2424,3030,3636,4242,4848,5454,6060,6667,7273,7879,8485,9091,9697,10303,10909,11515,12121" > upintheair.json
+  curl "http://www.heywhatsthat.com/api/upintheair.json?id=${hwt}&refraction=0.0&alts=$hwth,606,1212,1818,2424,3030,3636,4242,4848,5454,6060,6667,7273,7879,8485,9091,9697,10303,10909,11515,12121" > upintheair.json
 
 
 fi
