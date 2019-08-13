@@ -26,9 +26,9 @@ un=pi
 
 hwt=
 
-# Keep data yes/no - If yes, raw data is saved in current directory on completion
+# Keep data - yes/no
 
-keep=no
+keep=yes
 
 int=$2
 date=$(date -I)
@@ -36,6 +36,7 @@ PWD=$(pwd)
 archiveloc=/run/timelapse1090
 TMPDIR=$(mktemp -d)
 HWTDIR=$(mktemp -d)
+
 
 
 mem=$(free -m|awk '/^Mem:/{print $2}')
@@ -127,14 +128,20 @@ nice -n 19 awk -i inplace -F "," -v rlat=$lat -v rlon=$lon -v rh=$rh 'function d
         {data(rlat,rlon,rh,$2,$1,$4,$3)}' $wdir/heatmap
 
 echo "Filtering altitudes"
-awk -v low="$low" -F "," '$4 <= low' $wdir/heatmap > $TMPDIR/heatmap_low
-awk -v high="$high" -F "," '$4 >= high' $wdir/heatmap > $TMPDIR/heatmap_high
+awk -v low="$low" -F "," '$4 <= low' $wdir/heatmap > $wdir/heatmap_low
+awk -v high="$high" -F "," '$4 >= high' $wdir/heatmap > $wdir/heatmap_high
 
 echo "Processing heywhatsthat.com data:"
 
 file=$PWD/upintheair.json
-echo $pwd
-echo $file
+
+if [[ -f $file ]] && [[ ! -s $file ]]; then
+
+echo "Removing empty upintheair.json"
+rm $file
+
+fi
+
 
 if [ ! -f "$file" ]; then
 
@@ -347,16 +354,44 @@ sudo cp elevation-$date.png $dumpdir/elevation.png
 sudo cp altgraph-$date.png $dumpdir/altgraph.png
 sudo cp closealt-$date.png $dumpdir/closealt.png
 
+sudo sh -c "cat > $dumpdir/plots.html" <<EOF
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>Heatmap plots created $date</h1>
+
+<p>Heatmap</p>
+<img src="heatmap.png" alt="Heatmap" width="1800">
+
+<p>Aircraft below $low feet</p>
+<img src="heatmap_low.png" alt="Low Altitude" width="1800">
+
+<p>Aircraft above $high feet</p>
+<img src="heatmap_high.png" alt="High Altitude" width="1800">
+
+<p>Azimuth/Elevation plot</p>
+<img src="elevation.png" alt="Elevation" width="1800">
+
+<p>Range/Altitude</p>
+<img src="altgraph.png" alt="Altitude" width="1800">
+
+<p>Close Range Altitude</p>
+<img src="closealt.png" alt="Close Range" width="1800">
+
+</body>
+</html>
+
+EOF
+
+
 echo "Graphs available at :"
-echo "http://$pi/dump1090-fa/heatmap.png"
-echo "http://$pi/dump1090-fa/heatmap_low.png"
-echo "http://$pi/dump1090-fa/heatmap_high.png"
-echo "http://$pi/dump1090-fa/elevation.png"
-echo "http://$pi/dump1090-fa/altgraph.png"
-echo "http://$pi/dump1090-fa/closealt.png"
+echo "http://$pi/dump1090-fa/plots.html"
 
 
 fi
 
 echo "Graphs rendered in $SECONDS seconds"
+
 
