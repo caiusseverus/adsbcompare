@@ -37,7 +37,13 @@ archiveloc=/run/timelapse1090
 TMPDIR=$(mktemp -d)
 HWTDIR=$(mktemp -d)
 
+if [ -z "$hwt" ]; then
+        echo "Please set your HeyWhatsThat ID before running this script"
+        exit
+else
+        echo "HWT OK"
 
+fi
 
 mem=$(free -m|awk '/^Mem:/{print $2}')
 
