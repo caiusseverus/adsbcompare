@@ -340,6 +340,8 @@ mv $wdir/heatmap $PWD/polarheatmap-$date
 
 fi
 
+rm $wdir/heatmap_low
+rm $wdir/heatmap_high
 rm -r $TMPDIR
 rm -r $HWTDIR
 
