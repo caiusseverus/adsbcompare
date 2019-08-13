@@ -344,9 +344,12 @@ EOF
 if [ $keep == yes ]; then
 
 mv $wdir/heatmap $PWD/polarheatmap-$date
+rm $wdir/heatmap_low
+rm $wdir/heatmap_high
 
 fi
 
+rm $wdir/heatmap
 rm $wdir/heatmap_low
 rm $wdir/heatmap_high
 rm -r $TMPDIR
