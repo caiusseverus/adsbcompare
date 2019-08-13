@@ -395,7 +395,7 @@ EOF
 
 
 echo "Graphs available at :"
-echo "http://$pi/dump1090-fa/plots.html"
+echo "http://$pi/dump1090-fa/data/plots.html"
 
 
 fi
