@@ -1,10 +1,6 @@
 #!/bin/bash
 
-rm /tmp/day
-rm /tmp/week
-rm /tmp/month
-rm /tmp/year
-rm /tmp/old
+sudo rm /tmp/daily.png
 
 for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 1); do
 
@@ -280,6 +276,15 @@ set key off
 plot    '/tmp/old' u ($4):($2+$3) with points lt rgb '#001CD2' pt 2 notitle, \
         '/tmp/week' u ($4):($2+$3):($1/1852) with points lt palette pt 7 notitle, f(x) lt rgb "black" title "Week" at end
 
+
 EOF
 
+sudo rm /tmp/day
+sudo rm /tmp/week
+sudo rm /tmp/month
+sudo rm /tmp/year
+sudo rm /tmp/old
+sudo rm /tmp/fit
+
 sudo cp /tmp/daily.png /run/dump1090-fa/daily.png
+
