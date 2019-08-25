@@ -36,7 +36,7 @@ PWD=$(pwd)
 archiveloc=/run/timelapse1090
 TMPDIR=$(mktemp -d)
 HWTDIR=$(mktemp -d)
-hwth=$(($rh +1))
+hwth=$(($rh +10))
 
 if [ -z "$hwt" ]; then
         echo "Please set your HeyWhatsThat ID before running this script"
@@ -212,6 +212,7 @@ rh=ARG6
 range=ARG7
 dir=ARG8
 hwt=ARG9
+hwth=(ARG6 + 10)
 
 set terminal pngcairo dashed enhanced size 2000,2000
 set datafile separator comma
@@ -301,7 +302,7 @@ set ytics 3
 print "Generating elevation heatmap..."
 
 plot dir.'/heatmap' u ($6):($7):($3) with dots lc palette, \
-        hwt.'/50' u ($4):($5) with lines lc rgb "white" notitle
+        hwt.'/'.hwth u ($4):($5) with lines lc rgb "white" notitle
 
 set terminal pngcairo enhanced size 1920,1080
 set output 'altgraph-'.date.'.png'
@@ -347,11 +348,14 @@ mv $wdir/heatmap $PWD/polarheatmap-$date
 rm $wdir/heatmap_low
 rm $wdir/heatmap_high
 
-fi
+else
 
 rm $wdir/heatmap
 rm $wdir/heatmap_low
 rm $wdir/heatmap_high
+
+fi
+
 rm -r $TMPDIR
 rm -r $HWTDIR
 
