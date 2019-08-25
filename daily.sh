@@ -271,7 +271,7 @@ stats '/tmp/week' using ($1/1852) name "Range" noout
 lb = (Range_mean - Range_stddev*2)
 ub = (Range_mean + Range_stddev*2)
 
-set palette rgbformula 34,35,36
+set palette rgbformula 21,22,23
 set cblabel 'Range nm'
 set cbrange [lb:ub]
 set colorbox horizontal user origin graph 0.4, graph 0.1 size graph 0.5, graph 0.05
