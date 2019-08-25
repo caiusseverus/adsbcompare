@@ -218,12 +218,12 @@ set terminal pngcairo dashed enhanced size 2000,2000
 set datafile separator comma
 set object 1 rectangle from screen 0,0 to screen 1,1 fillcolor rgb "black" behind
 set output 'polarheatmap-'.date.'.png'
-
 set border lc rgb "white"
 
-set cbrange [-40:0]
+stats dir.'/heatmap' u ($3) noout
+set cbrange [(STATS_mean - 2.5 * STATS_stddev):0]
 set cblabel "RSSI" tc rgb "white"
-#set label at 0,0 "" point pointtype 7 lc rgb "cyan" ps 1.2 front
+
 set palette rgb 21,22,23
 
 set polar
@@ -287,7 +287,7 @@ set datafile separator comma
 set output 'elevation-'.date.'.png'
 
 set object 1 rectangle from screen 0,0 to screen 1,1 fillcolor rgb "black" behind
-set cbrange [-40:0]
+set cbrange [(STATS_mean - 2.5 * STATS_stddev):0]
 set title "Azimuth/Elevation plot" tc rgb "white"
 set border lc rgb "white"
 set cblabel "RSSI" tc rgb "white"
@@ -306,7 +306,6 @@ plot dir.'/heatmap' u ($6):($7):($3) with dots lc palette, \
 
 set terminal pngcairo enhanced size 1920,1080
 set output 'altgraph-'.date.'.png'
-
 set cblabel "RSSI" tc rgb "white"
 set palette rgb 21,22,23
 set colorbox user vertical origin 0.9, 0.1 size 0.02, 0.15
@@ -369,6 +368,8 @@ sudo cp polarheatmap_high-$date.png $dumpdir/heatmap_high.png
 sudo cp elevation-$date.png $dumpdir/elevation.png
 sudo cp altgraph-$date.png $dumpdir/altgraph.png
 sudo cp closealt-$date.png $dumpdir/closealt.png
+sudo cp closerange-$date.png $dumpdir/closerange.png
+
 
 sudo sh -c "cat > $dumpdir/plots.html" <<EOF
 
@@ -396,6 +397,9 @@ sudo sh -c "cat > $dumpdir/plots.html" <<EOF
 <p>Close Range Altitude</p>
 <img src="closealt.png" alt="Close Range" width="1800">
 
+<p>Close Range</p>
+<img src="closerange.png" alt="Close Range" width="1800">
+
 </body>
 </html>
 
@@ -409,5 +413,4 @@ echo "http://$pi/dump1090-fa/data/plots.html"
 fi
 
 echo "Graphs rendered in $SECONDS seconds"
-
 
