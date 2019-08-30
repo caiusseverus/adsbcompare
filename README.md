@@ -29,6 +29,17 @@ Plots produced include:
 * Position/Signal strength heatmaps for high, low, and all altitudes.
 * Range/Altitude plot.
 
+Prerequisites for running this are: gawk, and gnuplot 5.2 or later.
+These are not included in rasbian stretch or the piaware image by default, but can be installed by doing:
+```
+sudo apt install gawk
+sudo apt install liblua5.3
+curl -sO http://ftp.debian.org/debian/pool/main/g/gnuplot/gnuplot-data_5.2.6+dfsg1-3_all.deb
+curl -sO http://ftp.debian.org/debian/pool/main/g/gnuplot/gnuplot-nox_5.2.6+dfsg1-3_armhf.deb
+sudo dpkg -i ./gnuplot-data_5.2.6+dfsg1-3_all.deb
+sudo dpkg -i ./gnuplot-nox_5.2.6+dfsg1-3_armhf.deb
+```
+
 To collect live data give the first argument as duration in minutes, and the second as the interval in seconds between samples:
 You need to set your receiver location and height in metres at the top of the script prior to running.
 
