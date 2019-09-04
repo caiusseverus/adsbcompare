@@ -34,10 +34,9 @@ These are not included in rasbian stretch or the piaware image by default, but c
 ```
 sudo apt install gawk
 sudo apt install liblua5.3
-curl -sO http://ftp.debian.org/debian/pool/main/g/gnuplot/gnuplot-data_5.2.6+dfsg1-3_all.deb
-curl -sO http://ftp.debian.org/debian/pool/main/g/gnuplot/gnuplot-nox_5.2.6+dfsg1-3_armhf.deb
-sudo dpkg -i ./gnuplot-data_5.2.6+dfsg1-3_all.deb
-sudo dpkg -i ./gnuplot-nox_5.2.6+dfsg1-3_armhf.deb
+wget -O gnuplot-data.deb http://ftp.debian.org/debian/pool/main/g/gnuplot/gnuplot-data_5.2.7+dfsg1-3_all.deb
+wget -O gnuplot-nox.deb http://ftp.debian.org/debian/pool/main/g/gnuplot/gnuplot-nox_5.2.7+dfsg1-3_armhf.deb
+sudo dpkg -i gnuplot-nox.deb gnuplot-data.deb
 ```
 
 To collect live data give the first argument as duration in minutes, and the second as the interval in seconds between samples:
