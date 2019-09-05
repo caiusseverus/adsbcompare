@@ -125,7 +125,7 @@ nice -n 19 awk -i inplace -F "," -v rlat=$lat -v rlon=$lon -v rh=$rh 'function d
     d = 6371000 * c
     x = atan2(sin(dlon * cos(lat2)), cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(dlon))
     phi = (x * (180 / 3.1415926) + 360) % 360
-    lamda = (180 / 3.1415926) * ((elev2 - elev1) / d - d / (2 * 6371000))
+    lamda = (180 / 3.1415926) * atan2((elev2 - elev1) / d - d / (2 * 6371000),1)
     printf("%f,%f,%.1f,%.0f,%.0f,%f,%f\n",lon2,lat2 * (180 / 3.1415926),rssi,elev2 * 3.28,d,phi,lamda)
         }
 
@@ -170,7 +170,7 @@ done
 
 for i in $(ls -1v $HWTDIR); do
 
-awk -i inplace -F "," -v rlat="$lat" -v rlon="$lon" -v rh="$rh" 'function data(lat1,lon1,elev1,lat2,lon2,elev2,  lamda,a,c,dlat,dlon,x) {
+awk -i inplace -F "," -v rlat="$lat" -v rlon="$lon" -v rh="$rh" -v hwth="$i" 'function data(lat1,lon1,elev1,lat2,lon2,elev2,  lamda,a,c,dlat,dlon,x) {
                 dlat = radians(lat2-lat1)
                 dlon = radians(lon2-lon1)
                 lat1 = radians(lat1)
@@ -180,14 +180,14 @@ awk -i inplace -F "," -v rlat="$lat" -v rlon="$lon" -v rh="$rh" 'function data(l
                 d = 6371000 * c
                 x = atan2(sin(dlon * cos(lat2)), cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(dlon))
                 phi = (x * (180 / 3.1415926) + 360) % 360
-                lamda = (180 / 3.1415926) * ((elev2 - elev1) / d - d / (2 * 6371000))
+                lamda = (180 / 3.1415926) * atan2((elev2 - elev1) / d - d / (2 * 6371000),1)
                 printf("%f,%f,%f,%f,%f,\n",lat2 * (180 / 3.1415926),lon2,d,phi,lamda)
                 }
 
                 function radians(degree) { # degrees to radians
                 return degree * (3.1415926 / 180.)}
 
-                {data(rlat,rlon,rh,$1,$2,$i)}' $HWTDIR/$i
+                {data(rlat,rlon,rh,$1,$2,hwth)}' $HWTDIR/$i
 done
 
 for i in $(ls -1v $HWTDIR); do
