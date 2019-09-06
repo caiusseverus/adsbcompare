@@ -39,6 +39,8 @@ wget -O gnuplot-nox.deb http://ftp.debian.org/debian/pool/main/g/gnuplot/gnuplot
 sudo dpkg -i gnuplot-nox.deb gnuplot-data.deb
 ```
 
+The current version of the script requires a https://www.heywhatsthat.com/ ID to generate a horizon profile and range ring - this should be set in the variables at the top of the script along with receiver height and position.
+
 To collect live data give the first argument as duration in minutes, and the second as the interval in seconds between samples:
 You need to set your receiver location and height in metres at the top of the script prior to running.
 
