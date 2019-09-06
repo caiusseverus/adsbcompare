@@ -375,33 +375,31 @@ sudo sh -c "cat > $dumpdir/plots.html" <<EOF
 
 <!DOCTYPE html>
 <html>
+<style>
+img {
+    max-width:100%;
+    height:auto;
+}
+</style>
 <body>
-
 <h1>Heatmap plots created $date</h1>
-
 <p>Heatmap</p>
-<img src="heatmap.png" alt="Heatmap" width="1800">
-
-<p>Aircraft below $low feet</p>
-<img src="heatmap_low.png" alt="Low Altitude" width="1800">
-
-<p>Aircraft above $high feet</p>
-<img src="heatmap_high.png" alt="High Altitude" width="1800">
-
+<img src="heatmap.png" alt="Heatmap">
+<p>Aircraft below 5000 feet</p>
+<img src="heatmap_low.png" alt="Low Altitude">
+<p>Aircraft above 25000 feet</p>
+<img src="heatmap_high.png" alt="High Altitude">
 <p>Azimuth/Elevation plot</p>
-<img src="elevation.png" alt="Elevation" width="1800">
-
+<img src="elevation.png" alt="Elevation">
 <p>Range/Altitude</p>
-<img src="altgraph.png" alt="Altitude" width="1800">
-
+<img src="altgraph.png" alt="Altitude">
 <p>Close Range Altitude</p>
-<img src="closealt.png" alt="Close Range" width="1800">
-
+<img src="closealt.png" alt="Close Range">
 <p>Close Range</p>
-<img src="closerange.png" alt="Close Range" width="1800">
-
+<img src="closerange.png" alt="Close Range">
 </body>
 </html>
+
 
 EOF
 
