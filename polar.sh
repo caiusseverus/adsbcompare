@@ -382,7 +382,7 @@ img {
 }
 </style>
 <body>
-<h1>Heatmap plots created $date</h1>
+<h1>Heatmap plots created $date from $count samples.</h1>
 <p>Heatmap</p>
 <img src="heatmap.png" alt="Heatmap">
 <p>Aircraft below 5000 feet</p>
