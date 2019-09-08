@@ -14,6 +14,10 @@ high=25000
 
 range=230
 
+# Include mlat aircraft? yes/no/mlat - setting to mlat will include only mlat results.
+
+mlat=yes
+
 #Set raspberry pi IP or hostname here:
 
 pi=raspberrypi
@@ -78,15 +82,28 @@ if [[ $1 == "-1" ]]; then
         echo "Unpacking compressed data:"
         for i in $datadir/chunk_*.gz; do
                 echo -n "."
-                zcat $i | jq -r '.files | .[] | .aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
-
-
+                if [[ $mlat == "yes" ]]; then
+                zcat $i | jq -r '.files | .[] | .aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                elif [[ $mlat == "no" ]]; then
+                zcat $i | jq -r '.files | .[] | .aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                elif [[ $mlat == "mlat" ]]; then
+                zcat $i | jq -r '.files | .[] | .aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                fi
         done
+
         echo ""
         echo "Retrieving recent history:"
+
         for i in $datadir/history_*.json; do
                 echo -n "."
-                sed -e '$d' $i | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                if [[ $mlat == "yes" ]]; then
+                sed -e '$d' $i | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                elif [[ $mlat == "no" ]]; then
+                sed -e '$d' $i | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                elif [[ $mlat == "mlat" ]]; then
+                sed -e '$d' $i | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                fi
+
         done
         echo ""
 
@@ -98,7 +115,13 @@ else
         echo "Gathering data every $2 seconds until $end"
 
         while (( SECONDS < secs )); do
-        jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | [.lon,.lat,.rssi,.alt_baro] | @csv' /run/dump1090-fa/aircraft.json >> $wdir/heatmap
+        if [[ $mlat == "yes" ]]; then
+        jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' /run/dump1090-fa/aircraft.json >> $wdir/heatmap
+        elif [[ $mlat == "no" ]]; then
+        jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .) | not) [.lon,.lat,.rssi,.alt_baro] | @csv' /run/dump1090-fa/aircraft.json >> $wdir/heatmap
+        elif [[ $mlat == "mlat" ]]; then
+        jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .)) [.lon,.lat,.rssi,.alt_baro] | @csv' /run/dump1090-fa/aircraft.json >> $wdir/heatmap
+        fi
         sleep $2
         done
 
@@ -114,7 +137,7 @@ echo "Number of data points collected: $count"
 echo "Calculating Range, Azimuth and Elevation data:"
 
 nice -n 19 awk -i inplace -F "," -v rlat=$lat -v rlon=$lon -v rh=$rh 'function data(lat1,lon1,elev1,lat2,lon2,elev2,rssi,  lamda,a,c,dlat,dlon,x) {
-
+    if(elev2=="ground") {elev2=0}
     dlat = radians(lat2-lat1)
     dlon = radians(lon2-lon1)
     lat1 = radians(lat1)
@@ -128,10 +151,8 @@ nice -n 19 awk -i inplace -F "," -v rlat=$lat -v rlon=$lon -v rh=$rh 'function d
     lamda = (180 / 3.1415926) * atan2((elev2 - elev1) / d - d / (2 * 6371000),1)
     printf("%f,%f,%.1f,%.0f,%.0f,%f,%f\n",lon2,lat2 * (180 / 3.1415926),rssi,elev2 * 3.28,d,phi,lamda)
         }
-
     function radians(degree) { # degrees to radians
     return degree * (3.1415926 / 180.)}
-
         {data(rlat,rlon,rh,$2,$1,$4,$3)}' $wdir/heatmap
 
 echo "Filtering altitudes"
@@ -154,7 +175,7 @@ if [ ! -f "$file" ]; then
 
 
   echo "Retrieving terrain profiles from heywhatsthat.com:"
-  curl "http://www.heywhatsthat.com/api/upintheair.json?id=${hwt}&refraction=0.0&alts=$hwth,606,1212,1818,2424,3030,3636,4242,4848,5454,6060,6667,7273,7879,8485,9091,9697,10303,10909,11515,12121" > upintheair.json
+  curl "http://www.heywhatsthat.com/api/upintheair.json?id=${hwt}&refraction=0.14&alts=$hwth,606,1212,1818,2424,3030,3636,4242,4848,5454,6060,6667,7273,7879,8485,9091,9697,10303,10909,11515,12121" > upintheair.json
 
 
 fi
@@ -163,14 +184,14 @@ fi
 for i in {0..20}; do
 
         ring=$(jq --argjson i "$i" --raw-output '.rings | .[$i] | .alt' upintheair.json)
-        jq --argjson i "$i" --raw-output '.rings | .[$i] | .points | .[] | @csv' upintheair.json > $HWTDIR/$ring
+        nice -n 19 jq --argjson i "$i" --raw-output '.rings | .[$i] | .points | .[] | @csv' upintheair.json > $HWTDIR/$ring
 
 
 done
 
 for i in $(ls -1v $HWTDIR); do
 
-awk -i inplace -F "," -v rlat="$lat" -v rlon="$lon" -v rh="$rh" -v hwth="$i" 'function data(lat1,lon1,elev1,lat2,lon2,elev2,  lamda,a,c,dlat,dlon,x) {
+nice -n 19 awk -i inplace -F "," -v rlat="$lat" -v rlon="$lon" -v rh="$rh" -v hwth="$i" 'function data(lat1,lon1,elev1,lat2,lon2,elev2,  lamda,a,c,dlat,dlon,x) {
                 dlat = radians(lat2-lat1)
                 dlon = radians(lon2-lon1)
                 lat1 = radians(lat1)
@@ -181,12 +202,10 @@ awk -i inplace -F "," -v rlat="$lat" -v rlon="$lon" -v rh="$rh" -v hwth="$i" 'fu
                 x = atan2(sin(dlon * cos(lat2)), cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(dlon))
                 phi = (x * (180 / 3.1415926) + 360) % 360
                 lamda = (180 / 3.1415926) * atan2((elev2 - elev1) / d - d / (2 * 6371000),1)
-                printf("%f,%f,%f,%f,%f,\n",lat2 * (180 / 3.1415926),lon2,d,phi,lamda)
+                printf("%f,%f,%f,%.0f,%f,\n",lat2 * (180 / 3.1415926),lon2,d,phi,lamda)
                 }
-
                 function radians(degree) { # degrees to radians
                 return degree * (3.1415926 / 180.)}
-
                 {data(rlat,rlon,rh,$1,$2,hwth)}' $HWTDIR/$i
 done
 
@@ -201,8 +220,7 @@ for i in $(ls -1v $HWTDIR); do
         echo $min >> $HWTDIR/min
 done
 
-gnuplot -c /dev/stdin $lat $lon $date $low $high $rh $range $wdir $HWTDIR <<"EOF"
-
+nice -n 19 gnuplot -c /dev/stdin $lat $lon $date $low $high $rh $range $wdir $HWTDIR <<"EOF"
 lat=ARG1
 lon=ARG2
 date=ARG3
@@ -213,26 +231,20 @@ range=ARG7
 dir=ARG8
 hwt=ARG9
 hwth=(ARG6 + 10)
-
 set terminal pngcairo dashed enhanced size 2000,2000
 set datafile separator comma
 set object 1 rectangle from screen 0,0 to screen 1,1 fillcolor rgb "black" behind
 set output 'polarheatmap-'.date.'.png'
 set border lc rgb "white"
-
 stats dir.'/heatmap' u ($3) noout
 set cbrange [(STATS_mean - 2.5 * STATS_stddev):0]
 set cblabel "RSSI" tc rgb "white"
-
 set palette rgb 21,22,23
-
 set polar
 set angles degrees
 set theta clockwise top
 set grid polar 45 linecolor rgb "white" front
 set colorbox user vertical origin 0.9, 0.80 size 0.02, 0.15
-
-
 set size square
 set title "Signal Heatmap ".date tc rgb "white"
 set xrange [-range:range]
@@ -240,23 +252,16 @@ set yrange [-range:range]
 set rtics 50
 set xtics 50
 set ytics 50
-
 print "Generating all altitudes heatmap..."
-
 plot dir.'/heatmap' u ($6):($5/1852):($3) with dots lc palette, \
         hwt.'/12121' u  ($4):($3/1852) with lines lc rgb "white" notitle, \
         hwt.'/12121' u ($4):($3/1852) every 359::0::359 with lines lc rgb "white" notitle
-
-
 set output 'polarheatmap_high-'.date.'.png'
 set title "Signal Heatmap aircraft above ".high." feet - ".date tc rgb "white"
 print "Generating high altitude heatmap..."
-
 plot dir.'/heatmap_high' u ($6):($5/1852):($3) with dots lc palette, \
         hwt.'/12121' u  ($4):($3/1852) with lines lc rgb "white" notitle, \
         hwt.'/12121' u ($4):($3/1852) every 359::0::359 with lines lc rgb "white" notitle
-
-
 set output 'polarheatmap_low-'.date.'.png'
 set title "Signal Heatmap aircraft below ".low." feet - ".date tc rgb "white"
 print "Generating low altitude heatmap..."
@@ -265,9 +270,7 @@ set yrange [-80:80]
 set rtics 20
 set xtics 20
 set ytics 20
-
 plot dir.'/heatmap_low' u ($6):($5/1852):($3) with dots lc palette
-
 set output 'closerange-'.date.'.png'
 set title 'Close range signals - '.date tc rgb "white"
 print "Generating close range heatmap"
@@ -276,16 +279,11 @@ set yrange [-5:5]
 set rtics 1
 set xtics 1
 set ytics 1
-
-plot dir.'/heatmap_low' u ($6):($5/1852):($3) with points pt 7 ps 0.5 lc palette
-
-
+plot dir.'/heatmap' u ($6):($5/1852):($3) with points pt 7 ps 0.5 lc palette
 reset
-
 set terminal pngcairo enhanced size 1920,1080
 set datafile separator comma
 set output 'elevation-'.date.'.png'
-
 set object 1 rectangle from screen 0,0 to screen 1,1 fillcolor rgb "black" behind
 set cbrange [(STATS_mean - 2.5 * STATS_stddev):0]
 set title "Azimuth/Elevation plot" tc rgb "white"
@@ -298,34 +296,24 @@ set yrange [-2:15]
 set xrange [0:360]
 set xtics 45
 set ytics 3
-
 print "Generating elevation heatmap..."
-
 plot dir.'/heatmap' u ($6):($7):($3) with dots lc palette, \
         hwt.'/'.hwth u ($4):($5) with lines lc rgb "white" notitle
-
 set terminal pngcairo enhanced size 1920,1080
 set output 'altgraph-'.date.'.png'
 set cblabel "RSSI" tc rgb "white"
 set palette rgb 21,22,23
 set colorbox user vertical origin 0.9, 0.1 size 0.02, 0.15
-
-
 set title "Range/Altitude" tc rgb "white"
 set xrange [*:250]
 set yrange [0:45000]
 set xtics 25
 set ytics 5000
-
 f(x) = (x**2 / 1.5129) - (rh * 3.3)
-
 print "Generating Range/Altitude plot..."
 unset key
-
 plot dir.'/heatmap' u ($5/1852):($4):($3) with dots lc palette, f(x) lt rgb "white" notitle, \
         hwt.'/max' u ($3/1852):($6*3.3) with lines dt 2 lc rgb "green" title "Terrain limit" at end
-
-
 set output 'closealt-'.date.'.png'
 set title "Close Range/Altitude" tc rgb "white"
 set xrange [0:50]
@@ -334,11 +322,7 @@ set xtics 5
 set ytics 500
 set datafile missing NaN
 print "Generating Close Range altitude plot"
-
 plot dir.'/heatmap' u ($5/1852 <= 50 ? $5/1852 : 1/0):($4 <= 10000 ? $4:1/0):($3) with dots lc palette
-
-
-
 EOF
 
 if [ $keep == yes ]; then
@@ -357,7 +341,6 @@ fi
 
 rm -r $TMPDIR
 rm -r $HWTDIR
-
 dumpdir=/run/dump1090-fa
 
 if [ -d "$dumpdir" ]; then
@@ -372,7 +355,6 @@ sudo cp closerange-$date.png $dumpdir/closerange.png
 
 
 sudo sh -c "cat > $dumpdir/plots.html" <<EOF
-
 <!DOCTYPE html>
 <html>
 <style>
@@ -385,9 +367,9 @@ img {
 <h1>Heatmap plots created $date from $count samples.</h1>
 <p>Heatmap</p>
 <img src="heatmap.png" alt="Heatmap">
-<p>Aircraft below 5000 feet</p>
+<p>Aircraft below $low feet</p>
 <img src="heatmap_low.png" alt="Low Altitude">
-<p>Aircraft above 25000 feet</p>
+<p>Aircraft above $high feet</p>
 <img src="heatmap_high.png" alt="High Altitude">
 <p>Azimuth/Elevation plot</p>
 <img src="elevation.png" alt="Elevation">
@@ -399,8 +381,6 @@ img {
 <img src="closerange.png" alt="Close Range">
 </body>
 </html>
-
-
 EOF
 
 
@@ -411,4 +391,3 @@ echo "http://$pi/dump1090-fa/data/plots.html"
 fi
 
 echo "Graphs rendered in $SECONDS seconds"
-
