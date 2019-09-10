@@ -1,5 +1,11 @@
 #! /bin/bash
 
+if [[ -f polar.conf ]]; then
+echo "Using config file"
+source polar.conf
+
+else
+echo "No config file found - a new one will be written"
 #Set receiver location and height above sea level here
 lat=
 lon=
@@ -16,7 +22,7 @@ range=230
 
 # Include mlat aircraft? yes/no/mlat - setting to mlat will include only mlat results.
 
-mlat=yes
+mlat=no
 
 #Set raspberry pi IP or hostname here:
 
@@ -34,6 +40,21 @@ hwt=
 
 keep=yes
 
+cat <<EOF > polar.conf
+lat=$lat
+lon=$lon
+rh=$rh
+low=$low
+high=$high
+range=$range
+mlat=$mlat
+pi=$pi
+hwt=$hwt
+keep=$keep
+EOF
+
+fi
+
 int=$2
 date=$(date -I)
 PWD=$(pwd)
@@ -49,6 +70,15 @@ else
         echo "HWT OK"
 
 fi
+
+if [[ $mlat == "yes" ]]; then
+        echo "ADS-B and MLAT aircraft will be plotted"
+elif [[ $mlat == "no" ]]; then
+        echo "ADS-B aircraft only will be plotted"
+elif [[ $mlat == "mlat" ]]; then
+        echo "MLAT aircraft only will be plotted"
+fi
+
 
 mem=$(free -m|awk '/^Mem:/{print $2}')
 
@@ -110,7 +140,6 @@ if [[ $1 == "-1" ]]; then
 else
 
         secs=$(($1 *60))
-        echo $secs
         end=$(date --date=now+${1}mins)
         echo "Gathering data every $2 seconds until $end"
 
@@ -220,6 +249,8 @@ for i in $(ls -1v $HWTDIR); do
         echo $min >> $HWTDIR/min
 done
 
+mv $HWTDIR/$hwth ${HWTDIR}/horiz
+
 nice -n 19 gnuplot -c /dev/stdin $lat $lon $date $low $high $rh $range $wdir $HWTDIR <<"EOF"
 lat=ARG1
 lon=ARG2
@@ -230,7 +261,7 @@ rh=ARG6
 range=ARG7
 dir=ARG8
 hwt=ARG9
-hwth=(ARG6 + 10)
+
 set terminal pngcairo dashed enhanced size 2000,2000
 set datafile separator comma
 set object 1 rectangle from screen 0,0 to screen 1,1 fillcolor rgb "black" behind
@@ -298,7 +329,7 @@ set xtics 45
 set ytics 3
 print "Generating elevation heatmap..."
 plot dir.'/heatmap' u ($6):($7):($3) with dots lc palette, \
-        hwt.'/'.hwth u ($4):($5) with lines lc rgb "white" notitle
+        hwt.'/horiz' u ($4):($5) with lines lc rgb "white" notitle
 set terminal pngcairo enhanced size 1920,1080
 set output 'altgraph-'.date.'.png'
 set cblabel "RSSI" tc rgb "white"
@@ -341,7 +372,13 @@ fi
 
 rm -r $TMPDIR
 rm -r $HWTDIR
-dumpdir=/run/dump1090-fa
+dumpdir=/usr/share/dump1090-fa/html/plots
+
+if [ -d /usr/share/dump1090-fa ] && [ ! -d $dumpdir ]; then
+
+sudo mkdir /usr/share/dump1090-fa/html/plots
+
+fi
 
 if [ -d "$dumpdir" ]; then
 
@@ -385,9 +422,10 @@ EOF
 
 
 echo "Graphs available at :"
-echo "http://$pi/dump1090-fa/data/plots.html"
+echo "http://$pi/dump1090-fa/plots/plots.html"
 
 
 fi
 
 echo "Graphs rendered in $SECONDS seconds"
+
