@@ -390,8 +390,17 @@ sudo cp altgraph-$date.png $dumpdir/altgraph.png
 sudo cp closealt-$date.png $dumpdir/closealt.png
 sudo cp closerange-$date.png $dumpdir/closerange.png
 
+date2=$(date +%T)
 
-sudo sh -c "cat > $dumpdir/plots.html" <<EOF
+if [[ $mlat == "yes" ]]; then
+        mlatstat="ADS-B and MLAT positions."
+elif [[ $mlat == "no" ]]; then
+        mlatstat="ADS-B positions only."
+elif [[ $mlat == "mlat" ]]; then
+        mlatstat="MLAT positions only."
+fi
+
+sudo sh -c "cat > $dumpdir/index.html" <<EOF
 <!DOCTYPE html>
 <html>
 <style>
@@ -401,7 +410,8 @@ img {
 }
 </style>
 <body>
-<h1>Heatmap plots created $date from $count samples.</h1>
+<h1>Heatmap plots created on $date at $date2 from $count samples.</h1>
+<h2>Plots include $mlatstat</h2>
 <p>Heatmap</p>
 <img src="heatmap.png" alt="Heatmap">
 <p>Aircraft below $low feet</p>
@@ -422,10 +432,9 @@ EOF
 
 
 echo "Graphs available at :"
-echo "http://$pi/dump1090-fa/plots/plots.html"
+echo "http://$pi/dump1090-fa/plots/"
 
 
 fi
 
 echo "Graphs rendered in $SECONDS seconds"
-
