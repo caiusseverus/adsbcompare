@@ -1,5 +1,7 @@
 #! /bin/bash
 
+set -e
+
 if [[ -f polar.conf ]]; then
 echo "Using config file"
 source polar.conf
@@ -160,14 +162,21 @@ else
         done
 
         else
-        if [[ $mlat == "yes" ]]; then
-        curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
-        elif [[ $mlat == "no" ]]; then
-        curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
-        elif [[ $mlat == "mlat" ]]; then
-        curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
-        fi
 
+        STATUSCODE=$(curl --silent --output /dev/null --write-out "%{http_code}" http://${pi}/${dump1090data}/aircraft.json)
+
+	 if [[ ${STATUSCODE} -ne '200' ]]; then
+		echo -e "http://${pi}/${dump1090data}/aircraft.json - ERR .. EXITING ..."
+		exit 1
+	 else
+                if [[ $mlat == "yes" ]]; then
+                curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                elif [[ $mlat == "no" ]]; then
+                curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                elif [[ $mlat == "mlat" ]]; then
+                curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                fi
+         fi        
         fi
 
 fi
