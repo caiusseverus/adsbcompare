@@ -1,5 +1,4 @@
 #! /bin/bash
-
 set -e
 
 if [[ -f polar.conf ]]; then
@@ -165,10 +164,15 @@ else
 
         STATUSCODE=$(curl --silent --output /dev/null --write-out "%{http_code}" http://${pi}/${dump1090data}/aircraft.json)
 
-	 if [[ ${STATUSCODE} -ne '200' ]]; then
-		echo -e "http://${pi}/${dump1090data}/aircraft.json - ERR .. EXITING ..."
-		exit 1
-	 else
+         if [[ ${STATUSCODE} -ne '200' ]]; then
+                echo -e "http://${pi}/${dump1090data}/aircraft.json - ERR .. EXITING ..."
+                exit 1
+         else
+                secs=$(($1 *60))
+                end=$(date --date=now+${1}mins)
+                echo "Gathering data every $2 seconds until $end"
+
+                while (( SECONDS < secs )); do
                 if [[ $mlat == "yes" ]]; then
                 curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
                 elif [[ $mlat == "no" ]]; then
@@ -176,7 +180,9 @@ else
                 elif [[ $mlat == "mlat" ]]; then
                 curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
                 fi
-         fi        
+                sleep $2
+                done
+        fi
         fi
 
 fi
@@ -285,7 +291,6 @@ rh=ARG6
 range=ARG7
 dir=ARG8
 hwt=ARG9
-
 set terminal pngcairo dashed enhanced size 2000,2000
 set datafile separator comma
 set object 1 rectangle from screen 0,0 to screen 1,1 fillcolor rgb "black" behind
