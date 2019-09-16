@@ -60,6 +60,8 @@ int=$2
 date=$(date -I)
 PWD=$(pwd)
 archiveloc=/run/timelapse1090
+dump1090loc=/run/dump1090-fa
+dump1090data=/dump1090-fa/data
 TMPDIR=$(mktemp -d)
 HWTDIR=$(mktemp -d)
 hwth=$(($rh +10))
@@ -140,21 +142,33 @@ if [[ $1 == "-1" ]]; then
 
 else
 
+        if [ -d "$dump1090loc" ]; then
+
         secs=$(($1 *60))
         end=$(date --date=now+${1}mins)
         echo "Gathering data every $2 seconds until $end"
 
         while (( SECONDS < secs )); do
         if [[ $mlat == "yes" ]]; then
-        jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' /run/dump1090-fa/aircraft.json >> $wdir/heatmap
+        jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' $dump1090loc/aircraft.json >> $wdir/heatmap
         elif [[ $mlat == "no" ]]; then
-        jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' /run/dump1090-fa/aircraft.json >> $wdir/heatmap
+        jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' $dump1090loc/aircraft.json >> $wdir/heatmap
         elif [[ $mlat == "mlat" ]]; then
-        jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' /run/dump1090-fa/aircraft.json >> $wdir/heatmap
+        jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' $dump1090loc/aircraft.json >> $wdir/heatmap
         fi
         sleep $2
         done
 
+        else
+        if [[ $mlat == "yes" ]]; then
+        curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+        elif [[ $mlat == "no" ]]; then
+        curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+        elif [[ $mlat == "mlat" ]]; then
+        curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select(any(.tisb[] ; .) | not) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+        fi
+
+        fi
 
 fi
 
