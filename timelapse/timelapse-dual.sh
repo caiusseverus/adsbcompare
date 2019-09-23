@@ -10,6 +10,14 @@ rh=
 
 range=100
 
+#Set raspberry pi IP or hostname here:
+
+pi=raspberrypi
+
+#Set raspberry pi username here:
+
+un=pi
+
 TMPDIR=$(mktemp -d)
 date=$(date -I)
 echo $TMPDIR
@@ -39,7 +47,7 @@ if [ -d "$archiveloc" ]; then
 else
 
         echo "Retrieving remote data.."
-        rsync -amzht --info=progress2 --delete-after -e ssh pi@raspberrypi:/run/timelapse1090/ $dir/data
+        rsync -amzht --info=progress2 --delete-after -e ssh $un@$pi:/run/timelapse1090/ $dir/data
         datadir=$dir/data
 fi
 
