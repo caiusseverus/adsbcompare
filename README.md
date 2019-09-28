@@ -32,10 +32,17 @@ Plots produced include:
 Prerequisites for running this are: gawk, and gnuplot 5.2 or later.
 These are not included in rasbian stretch or the piaware image by default, but can be installed by doing:
 ```
+sudo apt update
 sudo apt install gawk
 sudo apt install liblua5.3
-wget -O gnuplot-data.deb http://ftp.debian.org/debian/pool/main/g/gnuplot/gnuplot-data_5.2.7+dfsg1-3_all.deb
-wget -O gnuplot-nox.deb http://ftp.debian.org/debian/pool/main/g/gnuplot/gnuplot-nox_5.2.7+dfsg1-3_armhf.deb
+sudo apt install gnuplot-data gnuplot-nox
+sudo apt install jq aglfn
+
+cat /etc/os-release | grep PRETTY
+
+# the following is not required on Raspbian Buster, only on Stretch:
+wget -O gnuplot-data.deb http://ftp.debian.org/debian/pool/main/g/gnuplot/gnuplot-data_5.2.6+dfsg1-1+deb10u1_all.deb
+wget -O gnuplot-nox.deb http://ftp.debian.org/debian/pool/main/g/gnuplot/gnuplot-nox_5.2.6+dfsg1-1+deb10u1_armhf.deb
 sudo dpkg -i gnuplot-nox.deb gnuplot-data.deb
 ```
 
