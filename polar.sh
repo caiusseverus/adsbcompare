@@ -443,7 +443,10 @@ set xtics 25
 set ytics 25
 
 plot dir.'/heatmap' u (($5/1852) * cos (- $6 + 90)):(($5/1852) * sin (-$6 + 90)):($3) w dots lc palette, \
-        'world_10m.txt' u ($3/1852):($4/1852) w lines lc rgb "green" notitle
+        'world_10m.txt' u ($3/1852):($4/1852) w lines lc rgb "green" notitle, \
+        hwt.'/12121' u  (($3/1852) * cos (- $4 +90)):(($3/1852) * sin (- $4 + 90)) with lines lc rgb "white" notitle, \
+        hwt.'/12121' u (($3/1852) * cos (- $4 +90)):(($3/1852) * sin (- $4 + 90)) every 359::0::359 with lines lc rgb "white" notitle
+
 
 EOF
 
