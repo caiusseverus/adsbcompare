@@ -507,7 +507,7 @@ plot dir.'/heatmap_low' u (($5/1852) * cos (- $6 + 90)):(($5/1852) * sin (-$6 + 
         dir.'/large' u ($9/1852):($10/1852):($6) with labels offset char 2,-1 tc rgb "green", \
         dir.'/medium' u ($9/1852):($10/1852) with points pt 7 ps 1 lc rgb "green" notitle, \
         dir.'/medium' u ($9/1852):($10/1852):($6) with labels offset char 2,-1 tc rgb "green", \
-        dir.'/small' u ($9/1852):($10/1852) with points pt 7 ps 0.3 lc rgb "green" notitle, \
+        dir.'/small' u ($9/1852):($10/1852) with points pt 7 ps 0.3 lc rgb "green" notitle
 
 set title "Heatmap with map overlay"
 set output 'mapol-'.date.'.png'
