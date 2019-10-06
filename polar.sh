@@ -2,12 +2,15 @@
 set -e
 
 if [[ -f polar.conf ]]; then
-echo "Using config file"
+echo "Config file found"
 source polar.conf
 
 else
 echo "No config file found - a new one will be written"
-#Set receiver location and height above sea level here
+
+#Note - settings here are written to polar.conf on first run - values there will be used in preference to these for subsequent runs.
+
+#Set receiver location and height above sea level here - only required if not using heywahtsthat data.
 lat=
 lon=
 rh=
@@ -67,12 +70,101 @@ TMPDIR=$(mktemp -d)
 HWTDIR=$(mktemp -d)
 
 if [ -z "$hwt" ]; then
-        echo "Please set your HeyWhatsThat ID before running this script"
-        exit
+        echo "No HeyWhatsThat ID found"
+        echo "0,0,0,0,0" > $HWTDIR/12121
+        echo "0,0,0,0,0,0" > $HWTDIR/max
 else
         echo "HWT OK"
 
+echo "Processing heywhatsthat.com data:"
+
+file=$PWD/upintheair.json
+
+if [ -f $file ]; then
+
+hwtfile=$(jq --raw-output '.id' $file)
+
+if [  ! "$hwt" == "$hwtfile" ]; then
+        echo "Heywhatsthat ID has changed - downloading new file"
+        rm $PWD/upintheair.json
+
 fi
+
+fi
+
+if [[ -f $file ]] && [[ ! -s $file ]]; then
+
+echo "Removing empty upintheair.json"
+rm $file
+
+fi
+
+
+if [ ! -f "$file" ]; then
+
+
+  echo "Retrieving terrain profiles from heywhatsthat.com:"
+  curl "http://www.heywhatsthat.com/api/upintheair.json?id=${hwt}&refraction=0.14&alts=606,1212,1818,2424,3030,3636,4242,4848,5454,6060,6667,7273,7879,8485,9091,9697,10303,10909,11515,12121,13716" > upintheair.json
+
+
+fi
+
+echo ""
+echo "Setting receiver position from heywhatsthat data. If these values do not match what you are expecting, please check the heywhatsthat ID is correct and that it was generated with the correct location"
+
+lat=$(jq --raw-output '.lat' $file)
+lon=$(jq --raw-output '.lon' $file)
+rh=$(jq --raw-output '.elev_amsl' $file)
+
+echo "Latitude: " $lat
+echo "Longitude: " $lon
+echo "Height: " $rh
+echo ""
+
+for i in {0..20}; do
+
+        ring=$(jq --argjson i "$i" --raw-output '.rings | .[$i] | .alt' upintheair.json)
+        nice -n 19 jq --argjson i "$i" --raw-output '.rings | .[$i] | .points | .[] | @csv' upintheair.json > $HWTDIR/$ring
+
+
+done
+
+for i in $(ls -1v $HWTDIR); do
+
+nice -n 19 awk -i inplace -F "," -v rlat="$lat" -v rlon="$lon" -v rh="$rh" -v hwth="$i" 'function data(lat1,lon1,elev1,lat2,lon2,elev2,  lamda,a,c,dlat,dlon,x) {
+                dlat = radians(lat2-lat1)
+                dlon = radians(lon2-lon1)
+                lat1 = radians(lat1)
+                lat2 = radians(lat2)
+                a = (sin(dlat/2))^2 + cos(lat1) * cos(lat2) * (sin(dlon/2))^2
+                c = 2 * atan2(sqrt(a),sqrt(1-a))
+                d = 6371000 * c
+                x = atan2(sin(dlon * cos(lat2)), cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(dlon))
+                phi = (x * (180 / 3.1415926) + 360) % 360
+                lamda = (180 / 3.1415926) * atan2((elev2 - elev1) / d - d / (2 * 6371000),1)
+                printf("%f,%f,%f,%.0f,%f,\n",lat2 * (180 / 3.1415926),lon2,d,phi,lamda)
+                }
+                function radians(degree) { # degrees to radians
+                return degree * (3.1415926 / 180.)}
+                {data(rlat,rlon,rh,$1,$2,hwth)}' $HWTDIR/$i
+done
+
+for i in $(ls -1v $HWTDIR); do
+
+        max=$(sort -t',' -k3nr $HWTDIR/$i | head -1)
+        max="$max$i"
+        echo $max >> $HWTDIR/max
+
+        min=$(sort -t',' -k3n $HWTDIR/$i | head -1)
+        min="$min$i"
+        echo $min >> $HWTDIR/min
+done
+
+fi
+
+
+
+
 
 if [[ $mlat == "yes" ]]; then
         echo "ADS-B and MLAT aircraft will be plotted"
@@ -186,88 +278,6 @@ else
 
 fi
 
-echo "Processing heywhatsthat.com data:"
-
-file=$PWD/upintheair.json
-
-if [ -f $file ]; then
-
-hwtfile=$(jq --raw-output '.id' $file)
-
-if [  ! "$hwt" == "$hwtfile" ]; then
-        echo "Heywhatsthat ID has changed - downloading new file"
-        rm $PWD/upintheair.json
-
-fi
-
-fi
-
-if [[ -f $file ]] && [[ ! -s $file ]]; then
-
-echo "Removing empty upintheair.json"
-rm $file
-
-fi
-
-
-if [ ! -f "$file" ]; then
-
-
-  echo "Retrieving terrain profiles from heywhatsthat.com:"
-  curl "http://www.heywhatsthat.com/api/upintheair.json?id=${hwt}&refraction=0.14&alts=606,1212,1818,2424,3030,3636,4242,4848,5454,6060,6667,7273,7879,8485,9091,9697,10303,10909,11515,12121,13716" > upintheair.json
-
-
-fi
-
-echo ""
-echo "Setting receiver position from heywhatsthat data. If these values do not match what you are expecting, please check the heywhatsthat ID is correct and that it was generated with the correct location"
-
-lat=$(jq --raw-output '.lat' $file)
-lon=$(jq --raw-output '.lon' $file)
-rh=$(jq --raw-output '.elev_amsl' $file)
-
-echo "Latitude: " $lat
-echo "Longitude: " $lon
-echo "Height: " $rh
-
-for i in {0..20}; do
-
-        ring=$(jq --argjson i "$i" --raw-output '.rings | .[$i] | .alt' upintheair.json)
-        nice -n 19 jq --argjson i "$i" --raw-output '.rings | .[$i] | .points | .[] | @csv' upintheair.json > $HWTDIR/$ring
-
-
-done
-
-for i in $(ls -1v $HWTDIR); do
-
-nice -n 19 awk -i inplace -F "," -v rlat="$lat" -v rlon="$lon" -v rh="$rh" -v hwth="$i" 'function data(lat1,lon1,elev1,lat2,lon2,elev2,  lamda,a,c,dlat,dlon,x) {
-                dlat = radians(lat2-lat1)
-                dlon = radians(lon2-lon1)
-                lat1 = radians(lat1)
-                lat2 = radians(lat2)
-                a = (sin(dlat/2))^2 + cos(lat1) * cos(lat2) * (sin(dlon/2))^2
-                c = 2 * atan2(sqrt(a),sqrt(1-a))
-                d = 6371000 * c
-                x = atan2(sin(dlon * cos(lat2)), cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(dlon))
-                phi = (x * (180 / 3.1415926) + 360) % 360
-                lamda = (180 / 3.1415926) * atan2((elev2 - elev1) / d - d / (2 * 6371000),1)
-                printf("%f,%f,%f,%.0f,%f,\n",lat2 * (180 / 3.1415926),lon2,d,phi,lamda)
-                }
-                function radians(degree) { # degrees to radians
-                return degree * (3.1415926 / 180.)}
-                {data(rlat,rlon,rh,$1,$2,hwth)}' $HWTDIR/$i
-done
-
-for i in $(ls -1v $HWTDIR); do
-
-        max=$(sort -t',' -k3nr $HWTDIR/$i | head -1)
-        max="$max$i"
-        echo $max >> $HWTDIR/max
-
-        min=$(sort -t',' -k3n $HWTDIR/$i | head -1)
-        min="$min$i"
-        echo $min >> $HWTDIR/min
-done
 
 count=$(wc -l < $wdir/heatmap)
 
@@ -507,7 +517,7 @@ plot dir.'/heatmap_low' u (($5/1852) * cos (- $6 + 90)):(($5/1852) * sin (-$6 + 
         dir.'/large' u ($9/1852):($10/1852):($6) with labels offset char 2,-1 tc rgb "green", \
         dir.'/medium' u ($9/1852):($10/1852) with points pt 7 ps 1 lc rgb "green" notitle, \
         dir.'/medium' u ($9/1852):($10/1852):($6) with labels offset char 2,-1 tc rgb "green", \
-        dir.'/small' u ($9/1852):($10/1852) with points pt 7 ps 0.3 lc rgb "green" notitle
+        dir.'/small' u ($9/1852):($10/1852) with points pt 7 ps 0.3 lc rgb "green" notitle, \
 
 set title "Heatmap with map overlay"
 set output 'mapol-'.date.'.png'
