@@ -65,7 +65,6 @@ dump1090loc=/run/dump1090-fa
 dump1090data=/dump1090-fa/data
 TMPDIR=$(mktemp -d)
 HWTDIR=$(mktemp -d)
-hwth=$(($rh +10))
 
 if [ -z "$hwt" ]; then
         echo "Please set your HeyWhatsThat ID before running this script"
@@ -187,40 +186,17 @@ else
 
 fi
 
-
-
-count=$(wc -l < $wdir/heatmap)
-
-echo "Number of data points collected: $count"
-
-echo "Calculating Range, Azimuth and Elevation data:"
-
-nice -n 19 awk -i inplace -F "," -v rlat=$lat -v rlon=$lon -v rh=$rh 'function data(lat1,lon1,elev1,lat2,lon2,elev2,rssi,  lamda,a,c,dlat,dlon,x) {
-    if(elev2=="ground") {elev2=0}
-    dlat = radians(lat2-lat1)
-    dlon = radians(lon2-lon1)
-    lat1 = radians(lat1)
-    lat2 = radians(lat2)
-    elev2 = elev2 / 3.28
-    a = (sin(dlat/2))^2 + cos(lat1) * cos(lat2) * (sin(dlon/2))^2
-    c = 2 * atan2(sqrt(a),sqrt(1-a))
-    d = 6371000 * c
-    x = atan2(sin(dlon * cos(lat2)), cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(dlon))
-    phi = (x * (180 / 3.1415926) + 360) % 360
-    lamda = (180 / 3.1415926) * atan2((elev2 - elev1) / d - d / (2 * 6371000),1)
-    printf("%f,%f,%.1f,%.0f,%.0f,%f,%f\n",lon2,lat2 * (180 / 3.1415926),rssi,elev2 * 3.28,d,phi,lamda)
-        }
-    function radians(degree) { # degrees to radians
-    return degree * (3.1415926 / 180.)}
-        {data(rlat,rlon,rh,$2,$1,$4,$3)}' $wdir/heatmap
-
-echo "Filtering altitudes"
-awk -v low="$low" -F "," '$4 <= low' $wdir/heatmap > $wdir/heatmap_low
-awk -v high="$high" -F "," '$4 >= high' $wdir/heatmap > $wdir/heatmap_high
-
 echo "Processing heywhatsthat.com data:"
 
 file=$PWD/upintheair.json
+
+hwtfile=$(jq --raw-output '.id' $file)
+
+if [  ! "$hwt" == "$hwtfile" ]; then
+        echo "Heywhatsthat ID has changed - downloading new file"
+        rm $PWD/upintheair.json
+
+fi
 
 if [[ -f $file ]] && [[ ! -s $file ]]; then
 
@@ -234,11 +210,21 @@ if [ ! -f "$file" ]; then
 
 
   echo "Retrieving terrain profiles from heywhatsthat.com:"
-  curl "http://www.heywhatsthat.com/api/upintheair.json?id=${hwt}&refraction=0.14&alts=$hwth,606,1212,1818,2424,3030,3636,4242,4848,5454,6060,6667,7273,7879,8485,9091,9697,10303,10909,11515,12121" > upintheair.json
+  curl "http://www.heywhatsthat.com/api/upintheair.json?id=${hwt}&refraction=0.14&alts=606,1212,1818,2424,3030,3636,4242,4848,5454,6060,6667,7273,7879,8485,9091,9697,10303,10909,11515,12121,13716" > upintheair.json
 
 
 fi
 
+echo ""
+echo "Setting receiver position from heywhatsthat data. If these values do not match what you are expecting, please check the heywhatsthat ID is correct and that it was generated with the correct location"
+
+lat=$(jq --raw-output '.lat' $file)
+lon=$(jq --raw-output '.lon' $file)
+rh=$(jq --raw-output '.elev_amsl' $file)
+
+echo "Latitude: " $lat
+echo "Longitude: " $lon
+echo "Height: " $rh
 
 for i in {0..20}; do
 
@@ -279,7 +265,35 @@ for i in $(ls -1v $HWTDIR); do
         echo $min >> $HWTDIR/min
 done
 
-mv $HWTDIR/$hwth ${HWTDIR}/horiz
+count=$(wc -l < $wdir/heatmap)
+
+echo "Number of data points collected: $count"
+
+echo "Calculating Range, Azimuth and Elevation data:"
+
+nice -n 19 awk -i inplace -F "," -v rlat=$lat -v rlon=$lon -v rh=$rh 'function data(lat1,lon1,elev1,lat2,lon2,elev2,rssi,  lamda,a,c,dlat,dlon,x) {
+    if(elev2=="ground") {elev2=0}
+    dlat = radians(lat2-lat1)
+    dlon = radians(lon2-lon1)
+    lat1 = radians(lat1)
+    lat2 = radians(lat2)
+    elev2 = elev2 / 3.28
+    a = (sin(dlat/2))^2 + cos(lat1) * cos(lat2) * (sin(dlon/2))^2
+    c = 2 * atan2(sqrt(a),sqrt(1-a))
+    d = 6371000 * c
+    x = atan2(sin(dlon * cos(lat2)), cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(dlon))
+    phi = (x * (180 / 3.1415926) + 360) % 360
+    lamda = (180 / 3.1415926) * atan2((elev2 - elev1) / d - d / (2 * 6371000),1)
+    printf("%f,%f,%.1f,%.0f,%.0f,%f,%f\n",lon2,lat2 * (180 / 3.1415926),rssi,elev2 * 3.28,d,phi,lamda)
+        }
+    function radians(degree) { # degrees to radians
+    return degree * (3.1415926 / 180.)}
+        {data(rlat,rlon,rh,$2,$1,$4,$3)}' $wdir/heatmap
+
+echo "Filtering altitudes"
+awk -v low="$low" -F "," '$4 <= low' $wdir/heatmap > $wdir/heatmap_low
+awk -v high="$high" -F "," '$4 >= high' $wdir/heatmap > $wdir/heatmap_high
+
 
 world=$PWD/world_10m.txt
 
@@ -312,7 +326,40 @@ nice -n 19 sed -i -e :a -e '/./,$!d;/^\n*$/{$d;N;};/\n$/ba' world_10m.txt
 
 fi
 
+ap=$PWD/airports.csv
 
+if [ ! -f "$ap" ]; then
+
+curl https://ourairports.com/data/airports.csv | cut -d "," -f2,3,5,6,7,14 | tr -d '"' > $PWD/airports.csv
+
+sed -i '1d' $PWD/airports.csv
+
+awk -F "," -i inplace -v rlat="$lat" -v rlon="$lon" 'function data(lat1,lon1,lat2,lon2,  a,c,dlat,dlon,x,t,y) {
+    dlat = radians(lat2-lat1)
+    dlon = radians(lon2-lon1)
+    lat1 = radians(lat1)
+    lat2 = radians(lat2)
+    a = (sin(dlat/2))^2 + cos(lat1) * cos(lat2) * (sin(dlon/2))^2
+    c = 2 * atan2(sqrt(a),sqrt(1-a))
+    d = 6371000 * c
+    t = atan2(sin(dlon * cos(lat2)), cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(dlon))
+    phi = (t * (180 / 3.1415926) + 360) % 360
+    x = d*cos(radians(-phi)+radians(90))
+    y = d*sin(radians(-phi)+radians(90))
+    printf("%s,%s,%f,%f,%.0f,%s,%.0f,%0.2f,%.0f,%.0f\n",$1,$2,$3,$4,$5,$6,d,phi,x,y)
+        }
+    function radians(degree) { # degrees to radians
+    return degree * (3.1415926 / 180.)}
+        {data(rlat,rlon,$3,$4)}' $PWD/airports.csv
+
+awk -i inplace -F "," '!($7 > (350*1852))' $PWD/airports.csv
+
+fi
+
+awk -F "," '$2 == "large_airport"' $PWD/airports.csv > $wdir/large
+awk -F "," '$2 == "medium_airport"' $PWD/airports.csv > $wdir/medium
+awk -F "," '$2 == "small_airport"' $PWD/airports.csv > $wdir/small
+awk -F "," '$2 == "heliport"' $PWD/airports.csv >> $wdir/small
 
 nice -n 19 gnuplot -c /dev/stdin $lat $lon $date $low $high $rh $range $wdir $HWTDIR <<"EOF"
 lat=ARG1
@@ -367,12 +414,19 @@ plot dir.'/heatmap_low' u ($6):($5/1852):($3) with dots lc palette
 set output 'closerange-'.date.'.png'
 set title 'Close range signals - '.date tc rgb "white"
 print "Generating close range heatmap"
-set xrange [-5:5]
-set yrange [-5:5]
+set xrange [-10:10]
+set yrange [-10:10]
 set rtics 1
 set xtics 1
 set ytics 1
-plot dir.'/heatmap' u ($6):($5/1852):($3) with points pt 7 ps 0.5 lc palette
+plot dir.'/heatmap' u ($6):($5/1852):($3) with points pt 7 ps 0.5 lc palette, \
+        dir.'/large' u ($8):($7/1852) with points pt 7 ps 1.5 lc rgb "green" notitle, \
+        dir.'/large' u ($8):($7/1852):($1) with labels offset 1,-1 tc rgb "green", \
+        dir.'/medium' u ($8):($7/1852) with points pt 7 ps 1.5 lc rgb "green" notitle, \
+        dir.'/medium' u ($8):($7/1852):($1) with labels offset 1,-1 tc rgb "green", \
+        dir.'/small' u ($8):($7/1852):($1) with labels offset 1,-1 tc rgb "green", \
+        dir.'/small' u ($8):($7/1852) with points pt 7 ps 1.5 lc rgb "green" notitle, \
+
 reset
 set terminal pngcairo enhanced size 1920,1080
 set datafile separator comma
@@ -391,7 +445,12 @@ set xtics 45
 set ytics 3
 print "Generating elevation heatmap..."
 plot dir.'/heatmap' u ($6):($7):($3) with dots lc palette, \
-        hwt.'/12121' u ($4):($5) with lines lc rgb "white" notitle
+        hwt.'/12121' u ($4):($5) with lines lc rgb "white" notitle, \
+        dir.'/large' u ($7/1852 <= 50 ? $8 : 1/0):(-1) with points pt 9 ps 2 lc rgb "white" notitle, \
+        dir.'/large' u ($7/1852 <= 50 ? $8 : 1/0):(-1):($6) with labels offset 0,-1.5 tc rgb "white" font ",8", \
+        dir.'/medium' u ($7/1852 <= 25 ? $8 : 1/0):(-1) with points pt 9 ps 2 lc rgb "white" notitle, \
+        dir.'/medium' u ($7/1852 <= 25 ? $8 : 1/0):(-1):($6) with labels offset 0,-1.5 tc rgb "white" font ",8"
+
 set terminal pngcairo enhanced size 1920,1080
 set output 'altgraph-'.date.'.png'
 set cblabel "RSSI" tc rgb "white"
@@ -410,12 +469,18 @@ plot dir.'/heatmap' u ($5/1852):($4):($3) with dots lc palette, f(x) lt rgb "whi
 set output 'closealt-'.date.'.png'
 set title "Close Range/Altitude" tc rgb "white"
 set xrange [0:50]
-set yrange [0:10000]
+set yrange [-500:10000]
 set xtics 5
 set ytics 500
-set datafile missing NaN
 print "Generating Close Range altitude plot"
-plot dir.'/heatmap' u ($5/1852 <= 50 ? $5/1852 : 1/0):($4 <= 10000 ? $4:1/0):($3) with dots lc palette
+plot dir.'/heatmap' u ($5/1852 <= 50 ? $5/1852 : 1/0):($4 <= 10000 ? $4:1/0):($3) with dots lc palette, \
+        dir.'/large' u ($7/1852 <= 50 ? $7/1852 : 1/0):(-50) w points pt 9 ps 1 lc rgb "white", \
+        dir.'/large' u ($7/1852 <= 50 ? $7/1852 : 1/0):(-200):($6) with labels tc rgb "white" font ",8", \
+        dir.'/medium' u ($7/1852 <= 40 ? $7/1852 : 1/0):(-50) w points pt 9 ps 1 lc rgb "white", \
+        dir.'/medium' u ($7/1852 <= 40 ? $7/1852 : 1/0):(-200):($6) with labels tc rgb "white" font ",8", \
+        dir.'/small' u ($7/1852 <= 10 ? $7/1852 : 1/0):(-50) w points pt 9 ps 1 lc rgb "white", \
+        dir.'/small' u ($7/1852 <= 10 ? $7/1852 : 1/0):(-200):($6) with labels tc rgb "white" font ",8", \
+        0 lc rgb "white"
 
 set terminal pngcairo enhanced size 2000,2000
 set title "Low altitude with map" tc rgb "white"
@@ -433,7 +498,12 @@ set label "" at 0,0 point pointtype 1 ps 2 lc rgb "green" front
 print "Generating low heatmap with map overlay"
 
 plot dir.'/heatmap_low' u (($5/1852) * cos (- $6 + 90)):(($5/1852) * sin (-$6 + 90)):($3) w dots lc palette, \
-        'world_10m.txt' u ($3/1852):($4/1852) w lines lc rgb "green" notitle
+        'world_10m.txt' u ($3/1852):($4/1852) w lines lc rgb "green" notitle, \
+        dir.'/large' u ($9/1852):($10/1852) with points pt 7 ps 2 lc rgb "green" notitle, \
+        dir.'/large' u ($9/1852):($10/1852):($6) with labels offset char 2,-1 tc rgb "green", \
+        dir.'/medium' u ($9/1852):($10/1852) with points pt 7 ps 1 lc rgb "green" notitle, \
+        dir.'/medium' u ($9/1852):($10/1852):($6) with labels offset char 2,-1 tc rgb "green", \
+        dir.'/small' u ($9/1852):($10/1852) with points pt 7 ps 0.3 lc rgb "green" notitle, \
 
 set title "Heatmap with map overlay"
 set output 'mapol-'.date.'.png'
@@ -445,7 +515,9 @@ set ytics 25
 plot dir.'/heatmap' u (($5/1852) * cos (- $6 + 90)):(($5/1852) * sin (-$6 + 90)):($3) w dots lc palette, \
         'world_10m.txt' u ($3/1852):($4/1852) w lines lc rgb "green" notitle, \
         hwt.'/12121' u  (($3/1852) * cos (- $4 +90)):(($3/1852) * sin (- $4 + 90)) with lines lc rgb "white" notitle, \
-        hwt.'/12121' u (($3/1852) * cos (- $4 +90)):(($3/1852) * sin (- $4 + 90)) every 359::0::359 with lines lc rgb "white" notitle
+        hwt.'/12121' u (($3/1852) * cos (- $4 +90)):(($3/1852) * sin (- $4 + 90)) every 359::0::359 with lines lc rgb "white" notitle, \
+        dir.'/large' u ($9/1852):($10/1852) with points pt 7 ps 1 lc rgb "green" notitle, \
+        dir.'/medium' u ($9/1852):($10/1852) with points pt 7 ps 0.75 lc rgb "green" notitle
 
 
 EOF
@@ -464,6 +536,9 @@ rm $wdir/heatmap_high
 
 fi
 
+rm $wdir/large
+rm $wdir/medium
+rm $wdir/small
 rm -r $TMPDIR
 rm -r $HWTDIR
 dumpdir=/usr/share/dump1090-fa/html/plots
