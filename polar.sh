@@ -190,11 +190,15 @@ echo "Processing heywhatsthat.com data:"
 
 file=$PWD/upintheair.json
 
+if [ -f $file ]; then
+
 hwtfile=$(jq --raw-output '.id' $file)
 
 if [  ! "$hwt" == "$hwtfile" ]; then
         echo "Heywhatsthat ID has changed - downloading new file"
         rm $PWD/upintheair.json
+
+fi
 
 fi
 
@@ -474,12 +478,12 @@ set xtics 5
 set ytics 500
 print "Generating Close Range altitude plot"
 plot dir.'/heatmap' u ($5/1852 <= 50 ? $5/1852 : 1/0):($4 <= 10000 ? $4:1/0):($3) with dots lc palette, \
-        dir.'/large' u ($7/1852 <= 50 ? $7/1852 : 1/0):(-50) w points pt 9 ps 1 lc rgb "white", \
-        dir.'/large' u ($7/1852 <= 50 ? $7/1852 : 1/0):(-200):($6) with labels tc rgb "white" font ",8", \
-        dir.'/medium' u ($7/1852 <= 40 ? $7/1852 : 1/0):(-50) w points pt 9 ps 1 lc rgb "white", \
-        dir.'/medium' u ($7/1852 <= 40 ? $7/1852 : 1/0):(-200):($6) with labels tc rgb "white" font ",8", \
-        dir.'/small' u ($7/1852 <= 10 ? $7/1852 : 1/0):(-50) w points pt 9 ps 1 lc rgb "white", \
-        dir.'/small' u ($7/1852 <= 10 ? $7/1852 : 1/0):(-200):($6) with labels tc rgb "white" font ",8", \
+        dir.'/large' u ($7/1852 <= 50 ? $7/1852 : 1/0):($5) w points pt 9 ps 1 lc rgb "white", \
+        dir.'/large' u ($7/1852 <= 50 ? $7/1852 : 1/0):($5-150):($6) with labels tc rgb "white" font ",8", \
+        dir.'/medium' u ($7/1852 <= 40 ? $7/1852 : 1/0):($5) w points pt 9 ps 1 lc rgb "white", \
+        dir.'/medium' u ($7/1852 <= 40 ? $7/1852 : 1/0):($5-150):($6) with labels tc rgb "white" font ",8", \
+        dir.'/small' u ($7/1852 <= 10 ? $7/1852 : 1/0):($5) w points pt 9 ps 1 lc rgb "white", \
+        dir.'/small' u ($7/1852 <= 10 ? $7/1852 : 1/0):($5-150):($6) with labels tc rgb "white" font ",8", \
         0 lc rgb "white"
 
 set terminal pngcairo enhanced size 2000,2000
