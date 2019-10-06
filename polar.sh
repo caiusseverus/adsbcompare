@@ -429,7 +429,7 @@ plot dir.'/heatmap' u ($6):($5/1852):($3) with points pt 7 ps 0.5 lc palette, \
         dir.'/medium' u ($8):($7/1852) with points pt 7 ps 1.5 lc rgb "green" notitle, \
         dir.'/medium' u ($8):($7/1852):($1) with labels offset 1,-1 tc rgb "green", \
         dir.'/small' u ($8):($7/1852):($1) with labels offset 1,-1 tc rgb "green", \
-        dir.'/small' u ($8):($7/1852) with points pt 7 ps 1.5 lc rgb "green" notitle, \
+        dir.'/small' u ($8):($7/1852) with points pt 7 ps 1.5 lc rgb "green" notitle
 
 reset
 set terminal pngcairo enhanced size 1920,1080
