@@ -43,7 +43,7 @@ set title "Comparison of ".ARG1." to ".ARG2." and ".ARG3." to ".ARG4
 set fit prescale
 set fit logfile '/tmp/fit'
 FIT_LIMIT = 1.e-10
-FIR_MAXITER = 100
+FIT_MAXITER = 100
 
 f(x) = a/20*x**2 - 10*b*x + 3000*abs(c)*x/sqrt(6000*abs(d)+x**2)
 a=1
