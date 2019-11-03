@@ -1,13 +1,6 @@
 #! /bin/bash
 set -e
 
-if [[ -f polar.conf ]]; then
-echo "Config file found"
-source polar.conf
-
-else
-echo "No config file found - a new one will be written"
-
 #Note - settings here are written to polar.conf on first run - values there will be used in preference to these for subsequent runs.
 
 #Set receiver location and height above sea level here - only required if not using heywahtsthat data.
@@ -47,6 +40,13 @@ keep=yes
 # Filter interval
 
 filter=10
+
+if [[ -f polar.conf ]]; then
+echo "Config file found"
+source polar.conf
+
+else
+echo "No config file found - a new one will be written"
 
 cat <<EOF > polar.conf
 lat=$lat
@@ -211,18 +211,19 @@ if [[ $1 == "-1" ]]; then
         jq_nocrud="select( (has(\"tisb\") | not) or (.tisb | contains([\"lat\"]) | not) ) | select(.rssi != -49.5)"
         jq_base=".aircraft | .[] | select(.seen_pos != null) | select(.seen_pos <= $filter) | $jq_nocrud"
         jq_end="[.lon,.lat,.rssi,.alt_baro] | @csv"
-        jq_nomlat="select(any(.mlat[] ; .) | not)"
-        jq_mlat="select(any(.mlat[] ; .))"
+        jq_both="$jq_base | $jq_end"
+        jq_adsb="$jq_base | select(any(.mlat[] ; .) | not) | $jq_end"
+        jq_mlat="$jq_base | select(any(.mlat[] ; .)) | $jq_end"
 
         echo "Unpacking compressed data:"
         for i in $datadir/chunk_*.gz; do
                 echo -n "."
                 if [[ $mlat == "yes" ]]; then
-                zcat $i | jq -r ".files | .[] | $jq_base | $jq_end" >> $wdir/heatmap
+                zcat $i | jq -r ".files | .[] | $jq_both" >> $wdir/heatmap
                 elif [[ $mlat == "no" ]]; then
-                zcat $i | jq -r ".files | .[] | $jq_base | $jq_nomlat | $jq_end" >> $wdir/heatmap
+                zcat $i | jq -r ".files | .[] | $jq_adsb" >> $wdir/heatmap
                 elif [[ $mlat == "mlat" ]]; then
-                zcat $i | jq -r ".files | .[] | $jq_base | $jq_mlat | $jq_end" >> $wdir/heatmap
+                zcat $i | jq -r ".files | .[] | $jq_mlat" >> $wdir/heatmap
                 fi
         done
 
@@ -232,11 +233,11 @@ if [[ $1 == "-1" ]]; then
         for i in $datadir/history_*.json; do
                 echo -n "."
                 if [[ $mlat == "yes" ]]; then
-                sed -e '$d' $i | jq -r "$jq_base | $jq_end" >> $wdir/heatmap
+                sed -e '$d' $i | jq -r "$jq_both" >> $wdir/heatmap
                 elif [[ $mlat == "no" ]]; then
-                sed -e '$d' $i | jq -r "$jq_base | $jq_nomlat | $jq_end" >> $wdir/heatmap
+                sed -e '$d' $i | jq -r "$jq_adsb" >> $wdir/heatmap
                 elif [[ $mlat == "mlat" ]]; then
-                sed -e '$d' $i | jq -r "$jq_base | $jq_mlat | $jq_end" >> $wdir/heatmap
+                sed -e '$d' $i | jq -r "$jq_mlat" >> $wdir/heatmap
                 fi
 
         done
@@ -252,11 +253,11 @@ else
 
         while (( SECONDS < secs )); do
         if [[ $mlat == "yes" ]]; then
-        jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | [.lon,.lat,.rssi,.alt_baro] | @csv' $dump1090loc/aircraft.json >> $wdir/heatmap
+        jq -r "$jq_both" $dump1090loc/aircraft.json >> $wdir/heatmap
         elif [[ $mlat == "no" ]]; then
-        jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' $dump1090loc/aircraft.json >> $wdir/heatmap
+        jq -r "$jq_adsb" $dump1090loc/aircraft.json >> $wdir/heatmap
         elif [[ $mlat == "mlat" ]]; then
-        jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' $dump1090loc/aircraft.json >> $wdir/heatmap
+        jq -r "$jq_mlat" $dump1090loc/aircraft.json >> $wdir/heatmap
         fi
         sleep $2
         done
