@@ -1,4 +1,6 @@
-#!/bin/bash
+ #!/bin/bash
+
+
 
 sudo rm /tmp/daily.png
 
@@ -20,7 +22,7 @@ for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 38 | head -n 30); do
 
 done
 
-for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 403 | head -n 365); do
+for i in $(ls -1r /var/lib/graphs1090/scatter/ | tail -n +39); do
 
         cat /var/lib/graphs1090/scatter/$i >> /tmp/year
 
@@ -32,6 +34,11 @@ for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 37 | head -n 30); do
 
 done
 
+for i in /var/lib/graphs1090/scatter/*; do
+
+        cat $i >> /tmp/all
+
+done
 
 gnuplot -c /dev/stdin <<"EOF"
 
@@ -60,9 +67,13 @@ stats '/tmp/year' u ($1/1852) name "Y" noout
 stats '/tmp/month' u ($1/1852) name "M" noout
 stats '/tmp/week' u ($1/1852) name "W" noout
 stats '/tmp/day' u ($1/1852) name "D" noout
+stats '/tmp/all' u ($1/1852) name "all"
 
-ub = ceil((Y_median + (Y_up_quartile - Y_lo_quartile) * 1.5) / 10) * 10 + 10
-lb = floor((Y_median - (Y_up_quartile - Y_lo_quartile) * 1.5) / 10) * 10 - 10
+ub = ceil((all_median + (all_up_quartile - all_lo_quartile) * 2) / 10) * 10 + 10
+lb = floor((all_median - (all_up_quartile - all_lo_quartile) * 2) / 10) * 10 - 10
+
+print ub
+print lb
 
 set yrange [lb:ub]
 
@@ -123,9 +134,10 @@ stats '/tmp/year' u ($2+$3) name "Y" noout
 stats '/tmp/month' u ($2+$3) name "M" noout
 stats '/tmp/week' u ($2+$3) name "W" noout
 stats '/tmp/day' u ($2+$3) name "D" noout
+stats '/tmp/all' u ($2+$3) name "all" noout
 
-ub = ceil((Y_max / 100) * 100 + 100)
-lb = floor((Y_min / 100) * 100 - 100)
+ub = ceil((all_max / 100) * 100 + 100)
+lb = floor((all_min / 100) * 100 - 100)
 
 set yrange [lb:ub]
 
@@ -188,9 +200,10 @@ stats '/tmp/year' u ($4) name "Y" noout
 stats '/tmp/month' u ($4) name "M" noout
 stats '/tmp/week' u ($4) name "W" noout
 stats '/tmp/day' u ($4) name "D" noout
+stats '/tmp/all' u ($4) name "all" noout
 
-ub = ceil((Y_max / 10) * 10 + 10)
-lb = floor((Y_min / 10) * 10 - 10)
+ub = ceil((all_max / 10) * 10 + 10)
+lb = floor((all_min / 10) * 10 - 10)
 
 set yrange [lb:ub]
 
@@ -285,6 +298,6 @@ sudo rm /tmp/month
 sudo rm /tmp/year
 sudo rm /tmp/old
 sudo rm /tmp/fit
+sudo rm /tmp/all
 
 sudo cp /tmp/daily.png /run/dump1090-fa/daily.png
-
