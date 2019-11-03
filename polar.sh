@@ -44,6 +44,10 @@ hwt=
 
 keep=yes
 
+# Filter interval
+
+filter=10
+
 cat <<EOF > polar.conf
 lat=$lat
 lon=$lon
@@ -56,6 +60,7 @@ pi=$pi
 un=$un
 hwt=$hwt
 keep=$keep
+filter=$filter
 EOF
 
 fi
@@ -208,11 +213,11 @@ if [[ $1 == "-1" ]]; then
         for i in $datadir/chunk_*.gz; do
                 echo -n "."
                 if [[ $mlat == "yes" ]]; then
-                zcat $i | jq -r '.files | .[] | .aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                zcat $i | jq -r '.files | .[] | .aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
                 elif [[ $mlat == "no" ]]; then
-                zcat $i | jq -r '.files | .[] | .aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                zcat $i | jq -r '.files | .[] | .aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
                 elif [[ $mlat == "mlat" ]]; then
-                zcat $i | jq -r '.files | .[] | .aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                zcat $i | jq -r '.files | .[] | .aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
                 fi
         done
 
@@ -222,11 +227,11 @@ if [[ $1 == "-1" ]]; then
         for i in $datadir/history_*.json; do
                 echo -n "."
                 if [[ $mlat == "yes" ]]; then
-                sed -e '$d' $i | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                sed -e '$d' $i | jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
                 elif [[ $mlat == "no" ]]; then
-                sed -e '$d' $i | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                sed -e '$d' $i | jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
                 elif [[ $mlat == "mlat" ]]; then
-                sed -e '$d' $i | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                sed -e '$d' $i | jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
                 fi
 
         done
@@ -242,11 +247,11 @@ else
 
         while (( SECONDS < secs )); do
         if [[ $mlat == "yes" ]]; then
-        jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | [.lon,.lat,.rssi,.alt_baro] | @csv' $dump1090loc/aircraft.json >> $wdir/heatmap
+        jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | [.lon,.lat,.rssi,.alt_baro] | @csv' $dump1090loc/aircraft.json >> $wdir/heatmap
         elif [[ $mlat == "no" ]]; then
-        jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' $dump1090loc/aircraft.json >> $wdir/heatmap
+        jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' $dump1090loc/aircraft.json >> $wdir/heatmap
         elif [[ $mlat == "mlat" ]]; then
-        jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' $dump1090loc/aircraft.json >> $wdir/heatmap
+        jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' $dump1090loc/aircraft.json >> $wdir/heatmap
         fi
         sleep $2
         done
@@ -265,11 +270,11 @@ else
 
                 while (( SECONDS < secs )); do
                 if [[ $mlat == "yes" ]]; then
-                curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
                 elif [[ $mlat == "no" ]]; then
-                curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
                 elif [[ $mlat == "mlat" ]]; then
-                curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.lat != null) | select (.lon !=null) | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
                 fi
                 sleep $2
                 done
@@ -314,6 +319,7 @@ world=$PWD/world_10m.txt
 if [ ! -f "$world" ]; then
 
 wget https://raw.githubusercontent.com/caiusseverus/adsbcompare/master/world_10m.txt
+#cp borders_10m.txt world_10m.txt
 
 nice -n 19 awk  -i inplace -v rlat="$lat" -v rlon="$lon" 'function data(lat1,lon1,lat2,lon2,  a,c,dlat,dlon,x,t,y) {
     dlat = radians(lat2-lat1)
@@ -335,8 +341,9 @@ nice -n 19 awk  -i inplace -v rlat="$lat" -v rlon="$lon" 'function data(lat1,lon
 
 nice -n 19 awk -i inplace -F "," '!($5 > (350*1852)) || ($1 == 0)' world_10m.txt
 nice -n 19 sed -i '/^$/d' world_10m.txt
-nice -n 19 sed -i -e 's/^0.000000,0.000000.*$//' world_10m.txt
+nice -n 19 sed -i -e 's/^0.000000.*$//' world_10m.txt
 nice -n 19 sed -i -e :a -e '/./,$!d;/^\n*$/{$d;N;};/\n$/ba' world_10m.txt
+nice -n 19 sed -i 'N;/^\n$/D;P;D;' world_10m.txt
 
 fi
 
