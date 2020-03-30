@@ -10,19 +10,19 @@ for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 1); do
 
 done
 
-for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 8 | head -n 7); do
+for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 7); do
 
         cat /var/lib/graphs1090/scatter/$i >> /tmp/week
 
 done
 
-for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 38 | head -n 30); do
+for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 30); do
 
         cat /var/lib/graphs1090/scatter/$i >> /tmp/month
 
 done
 
-for i in $(ls -1r /var/lib/graphs1090/scatter/ | tail -n +39); do
+for i in $(ls -1r /var/lib/graphs1090/scatter/ | tail -n 365); do
 
         cat /var/lib/graphs1090/scatter/$i >> /tmp/year
 
@@ -69,8 +69,8 @@ stats '/tmp/week' u ($1/1852) name "W" noout
 stats '/tmp/day' u ($1/1852) name "D" noout
 stats '/tmp/all' u ($1/1852) name "all"
 
-ub = ceil((all_median + (all_up_quartile - all_lo_quartile) * 2) / 10) * 10 + 10
-lb = floor((all_median - (all_up_quartile - all_lo_quartile) * 2) / 10) * 10 - 10
+ub = ceil((Y_median + (Y_up_quartile - Y_lo_quartile) * 2) / 10) * 10 + 10
+lb = floor((Y_median - (Y_up_quartile - Y_lo_quartile) * 2) / 10) * 10 - 10
 
 print ub
 print lb
@@ -136,8 +136,8 @@ stats '/tmp/week' u ($2+$3) name "W" noout
 stats '/tmp/day' u ($2+$3) name "D" noout
 stats '/tmp/all' u ($2+$3) name "all" noout
 
-ub = ceil((all_max / 100) * 100 + 100)
-lb = floor((all_min / 100) * 100 - 100)
+ub = ceil((Y_max / 100) * 100 + 100)
+lb = floor((Y_min / 100) * 100 - 100)
 
 set yrange [lb:ub]
 
@@ -202,8 +202,8 @@ stats '/tmp/week' u ($4) name "W" noout
 stats '/tmp/day' u ($4) name "D" noout
 stats '/tmp/all' u ($4) name "all" noout
 
-ub = ceil((all_max / 10) * 10 + 10)
-lb = floor((all_min / 10) * 10 - 10)
+ub = ceil((Y_max / 10) * 10 + 10)
+lb = floor((Y_min / 10) * 10 - 10)
 
 set yrange [lb:ub]
 
@@ -268,12 +268,11 @@ set fit logfile '/tmp/fit'
 FIT_LIMIT = 1.e-10
 FIT_MAXITER = 100
 
-f(x) = a/20*x**2 - 10*b*x + 3000*abs(c)*x/sqrt(6000*abs(d)+x**2)
-a=1
+f(x) = a + b * tanh(x/c)
+a=3000
 b=1
 c=1
-d=1
-fit f(x) '/tmp/week' using ($4):($2+$3) via a,b,c,d
+fit f(x) '/tmp/week' using ($4):($2+$3) via a,b,c
 
 stats '/tmp/week' using ($1/1852) name "Range" noout
 
@@ -287,7 +286,7 @@ set colorbox horizontal user origin graph 0.4, graph 0.1 size graph 0.5, graph 0
 set key off
 
 plot    '/tmp/old' u ($4):($2+$3) with points lt rgb '#001CD2' pt 2 notitle, \
-        '/tmp/week' u ($4):($2+$3):($1/1852) with points lt palette pt 7 notitle, f(x) lt rgb "black" title "Week" at end
+        '/tmp/week' u ($4):($2+$3):($1/1852) with points lt palette pt 7 notitle, [0:W_max] f(x) lt rgb "black" title "Week" at end
 
 
 EOF
