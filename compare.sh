@@ -37,6 +37,8 @@ set ylabel "Messages"
 set grid xtics ytics
 set xtics 50
 set ytics 100
+set mxtics
+set mytics
 set pointsize 0.5
 set title "Comparison of ".ARG1." to ".ARG2." and ".ARG3." to ".ARG4
 
@@ -45,22 +47,28 @@ set fit logfile '/tmp/fit'
 FIT_LIMIT = 1.e-10
 FIT_MAXITER = 100
 
-f(x) = a/20*x**2 - 10*b*x + 3000*abs(c)*x/sqrt(6000*abs(d)+x**2)
+stats   '/tmp/first' using ($4) name "AircraftA"
+stats   '/tmp/second' using ($4) name "AircraftB"
+stats   '/tmp/first' using ($1/1852) name "RangeA"
+stats   '/tmp/second' using ($1/1852) name "RangeB"
+stats   '/tmp/first' using ($2+$3) name "MessagesA"
+stats   '/tmp/second' using ($2+$3) name "MessagesB"
+
+
+f(x) = a + b * tanh(x/c)
 a=1
 b=1
 c=1
-d=1
-fit f(x) '/tmp/first' using ($4):($2+$3) via a,b,c,d
+fit f(x) '/tmp/first' using ($4):($2+$3) via a,b,c
 
-g(x) = j/20*x**2 - 10*k*x + 3000*abs(l)*x/sqrt(6000*abs(m)+x**2)
+g(x) = j + k * tanh(x/l)
 j=1
 k=1
 l=1
-m=1
-fit g(x) '/tmp/second' using ($4):($2+$3) via j,k,l,m
+fit g(x) '/tmp/second' using ($4):($2+$3) via j,k,l
 
-plot    '/tmp/first' using ($4):($2+$3) with points lt rgb "red" pt 7 title ARG1." to ".ARG2, f(x) lt rgb "black" notitle, \
-        '/tmp/second' using ($4):($2+$3) with point lt rgb "blue" pt 7 title ARG3." to ".ARG4,  g(x) lt rgb "black" notitle
+plot    '/tmp/first' using ($4):($2+$3) with points lt rgb "red" pt 7 title ARG1." to ".ARG2, [0:AircraftA_max] f(x) lt rgb "black" notitle, \
+        '/tmp/second' using ($4):($2+$3) with point lt rgb "blue" pt 7 title ARG3." to ".ARG4,  [0:AircraftB_max] g(x) lt rgb "black" notitle
 
 
 unset title
@@ -75,10 +83,6 @@ set xtics 50
 set pointsize 0.5
 unset title
 
-stats   '/tmp/first' using ($4) name "AircraftA"
-stats   '/tmp/first' using ($1/1852) name "RangeA"
-stats   '/tmp/second' using ($4) name "AircraftB"
-stats   '/tmp/second' using ($1/1852) name "RangeB"
 
 if (RangeA_min < RangeB_min) ymin = RangeA_min-5; else ymin = RangeB_min-5
 if (AircraftA_max > AircraftB_max) xmax = AircraftA_max + 10 ; else xmax = AircraftB_max + 10
@@ -136,8 +140,6 @@ set ytics auto
 
 plot    '/tmp/first' u (1):($2+$3) w boxplot lc "red" notitle, \
         '/tmp/second' u (2):($2+$3) w boxplot lc "blue" notitle
-
-
 
 
 EOF
