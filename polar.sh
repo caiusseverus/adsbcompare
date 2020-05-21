@@ -265,7 +265,7 @@ else
 
         else
 
-        STATUSCODE=$(curl --silent --output /dev/null --write-out "%{http_code}" http://${pi}/${dump1090data}/aircraft.json)
+        STATUSCODE=$(curl --silent --output /dev/null --write-out "%{http_code}" http://${pi}${dump1090data}/aircraft.json)
 
          if [[ ${STATUSCODE} -ne '200' ]]; then
                 echo -e "http://${pi}/${dump1090data}/aircraft.json - ERR .. EXITING ..."
@@ -277,11 +277,11 @@ else
 
                 while (( SECONDS < secs )); do
                 if [[ $mlat == "yes" ]]; then
-                curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                curl -sS http://${pi}${dump1090data}/aircraft.json | jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
                 elif [[ $mlat == "no" ]]; then
-                curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                curl -sS http://${pi}${dump1090data}/aircraft.json | jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .) | not) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
                 elif [[ $mlat == "mlat" ]]; then
-                curl -sS http://$pi/$dump1090data/aircraft.json | jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
+                curl -sS http://${pi}${dump1090data}/aircraft.json | jq -r '.aircraft | .[] | select(.seen_pos !=null) | select(.seen_pos <="$filter") | select(.rssi != -49.5) | select( (has("tisb") | not) or (.tisb | contains(["lat"]) | not) ) | select(any(.mlat[] ; .)) | [.lon,.lat,.rssi,.alt_baro] | @csv' >> $wdir/heatmap
                 fi
                 sleep $2
                 done
