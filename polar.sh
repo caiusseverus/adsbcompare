@@ -194,6 +194,13 @@ fi
 
 SECONDS=0
 
+jq_nocrud="select( (has(\"tisb\") | not) or (.tisb | contains([\"lat\"]) | not) ) | select(.rssi != -49.5)"
+jq_base=".aircraft | .[] | select(.seen_pos != null) | select(.seen_pos <= $filter) | $jq_nocrud"
+jq_end="[.lon,.lat,.rssi,.alt_baro] | @csv"
+jq_both="$jq_base | $jq_end"
+jq_adsb="$jq_base | select(any(.mlat[] ; .) | not) | $jq_end"
+jq_mlat="$jq_base | select(any(.mlat[] ; .)) | $jq_end"
+
 if [[ $1 == "-1" ]]; then
 
         if [ -d "$archiveloc" ]; then
@@ -208,12 +215,6 @@ if [[ $1 == "-1" ]]; then
         datadir=$PWD/data
 
         fi
-        jq_nocrud="select( (has(\"tisb\") | not) or (.tisb | contains([\"lat\"]) | not) ) | select(.rssi != -49.5)"
-        jq_base=".aircraft | .[] | select(.seen_pos != null) | select(.seen_pos <= $filter) | $jq_nocrud"
-        jq_end="[.lon,.lat,.rssi,.alt_baro] | @csv"
-        jq_both="$jq_base | $jq_end"
-        jq_adsb="$jq_base | select(any(.mlat[] ; .) | not) | $jq_end"
-        jq_mlat="$jq_base | select(any(.mlat[] ; .)) | $jq_end"
 
         echo "Unpacking compressed data:"
         for i in $datadir/chunk_*.gz; do
