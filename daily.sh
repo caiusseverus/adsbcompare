@@ -22,7 +22,7 @@ for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 30); do
 
 done
 
-for i in $(ls -1r /var/lib/graphs1090/scatter/ | tail -n 365); do
+for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 365); do
 
         cat /var/lib/graphs1090/scatter/$i >> /tmp/year
 
