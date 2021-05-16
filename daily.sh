@@ -320,7 +320,7 @@ reset
 unset multiplot
 set terminal pngcairo enhanced size 1900,900 background rgb 'gray15'
 set output '/tmp/history.png'
-set multiplot layout 2,2
+set multiplot layout 2,2 title 'Created '.date
 set size 0.5,1
 set origin 0,0
 set pointsize 0.5
