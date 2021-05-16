@@ -28,7 +28,7 @@ for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 365); do
 
 done
 
-for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 37 | head -n 30); do
+for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 372 | head -n 365); do
 
         cat /var/lib/graphs1090/scatter/$i >> /tmp/old
 
@@ -39,6 +39,32 @@ for i in /var/lib/graphs1090/scatter/*; do
         cat $i >> /tmp/all
 
 done
+
+for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 8 | head -n 7); do
+
+        cat /var/lib/graphs1090/scatter/$i >> /tmp/histweek
+
+done
+
+for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 38 | head -n 30); do
+
+        cat /var/lib/graphs1090/scatter/$i >> /tmp/histmonth
+
+done
+
+for i in $(ls -1 /var/lib/graphs1090/scatter/ | tail -n 403 | head -n 365); do
+
+        cat /var/lib/graphs1090/scatter/$i >> /tmp/histyear
+
+done
+
+for i in $(ls -1 /var/lib/graphs1090/scatter/ | head -n -404); do
+
+        cat /var/lib/graphs1090/scatter/$i >> /tmp/histold
+
+done
+
+
 
 gnuplot -c /dev/stdin <<"EOF"
 
@@ -261,17 +287,17 @@ set grid xtics ytics
 set xtics 50
 set ytics 100
 
-set title "Last week compared with preceding month"
+set title "Last week compared with preceding year"
 
 set fit prescale
 set fit logfile '/tmp/fit'
 FIT_LIMIT = 1.e-10
-FIT_MAXITER = 100
+FIT_MAXITER = 10000
 
 f(x) = a + b * tanh(x/c)
 a=3000
-b=1
-c=1
+b=5
+c=5
 fit f(x) '/tmp/week' using ($4):($2+$3) via a,b,c
 
 stats '/tmp/week' using ($1/1852) name "Range" noout
@@ -286,7 +312,59 @@ set colorbox horizontal user origin graph 0.4, graph 0.1 size graph 0.5, graph 0
 set key off
 
 plot    '/tmp/old' u ($4):($2+$3) with points lt rgb '#001CD2' pt 2 notitle, \
-        '/tmp/week' u ($4):($2+$3):($1/1852) with points lt palette pt 7 notitle, [0:W_max] f(x) lt rgb "black" title "Week" at end
+        '/tmp/week' u ($4):($2+$3):($1/1852) with points lt palette pt 7 notitle, \
+        [0:W_max] f(x) lt rgb "black" title "Week" at end
+
+
+reset
+unset multiplot
+set terminal pngcairo enhanced size 1900,900 background rgb 'gray15'
+set output '/tmp/history.png'
+set multiplot layout 2,2
+set size 0.5,1
+set origin 0,0
+set pointsize 0.5
+set title 'Message Rate/Aircraft'
+set xlabel "Aircraft"
+set ylabel "Message rate"
+set grid xtics ytics
+set xtics 50
+set ytics 100
+
+
+plot    '/tmp/histold' u ($4):($2+$3) with points lt rgb '#666666' pt 7 title "Old", \
+        '/tmp/histyear' u ($4):($2+$3) with points lt rgb '#001CD2' pt 7 title "Year", \
+        '/tmp/histmonth' u ($4):($2+$3) with points lt rgb '#90ee90' pt 7 title "Month", \
+        '/tmp/histweek' u ($4):($2+$3) with points lt rgb '#ffff00' pt 7 title "Week", \
+        '/tmp/day' u ($4):($2+$3) with points lt rgb '#ff0000' pt 7 title "Day"
+
+set size 0.5,0.5
+set origin 0.5,0.5
+set title 'Range/Aircraft'
+set xlabel 'Aircraft'
+set ylabel 'Range (nm)'
+set xtics 50
+set ytics 25
+
+plot    '/tmp/histold' u ($4):($1/1852) with points lt rgb '#666666' pt 7 title "Old", \
+        '/tmp/histyear' u ($4):($1/1852) with points lt rgb '#001CD2' pt 7 title "Year", \
+        '/tmp/histmonth' u ($4):($1/1852) with points lt rgb '#90ee90' pt 7 title "Month", \
+        '/tmp/histweek' u ($4):($1/1852) with points lt rgb '#ffff00' pt 7 title "Week", \
+        '/tmp/day' u ($4):($1/1852) with points lt rgb '#ff0000' pt 7 title "Day"
+
+set origin 0.5,0
+set title 'Messages/Aircraft'
+set xlabel 'Aircraft'
+set ylabel 'Messages/Aircraft'
+set xtics 50
+set ytics 5
+set yrange [0:35]
+
+plot    '/tmp/histold' u ($4):(($2+$3)/$4) with points lt rgb '#666666' pt 7 title "Old", \
+        '/tmp/histyear' u ($4):(($2+$3)/$4) with points lt rgb '#001CD2' pt 7 title "Year", \
+        '/tmp/histmonth' u ($4):(($2+$3)/$4) with points lt rgb '#90ee90' pt 7 title "Month", \
+        '/tmp/histweek' u ($4):(($2+$3)/$4) with points lt rgb '#ffff00' pt 7 title "Week", \
+        '/tmp/day' u ($4):(($2+$3)/$4) with points lt rgb '#ff0000' pt 7 title "Day"
 
 
 EOF
@@ -298,5 +376,10 @@ sudo rm /tmp/year
 sudo rm /tmp/old
 sudo rm /tmp/fit
 sudo rm /tmp/all
+sudo rm /tmp/histold
+sudo rm /tmp/histyear
+sudo rm /tmp/histmonth
+sudo rm /tmp/histweek
 
 sudo cp /tmp/daily.png /run/dump1090-fa/daily.png
+sudo cp /tmp/history.png /run/dump1090-fa/history.png
