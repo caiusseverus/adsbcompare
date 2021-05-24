@@ -569,11 +569,11 @@ rm $wdir/medium
 rm $wdir/small
 rm -r $TMPDIR
 rm -r $HWTDIR
-dumpdir=/usr/share/dump1090-fa/html/plots
+dumpdir=/usr/share/skyaware/html/plots
 
-if [ -d /usr/share/dump1090-fa ] && [ ! -d $dumpdir ]; then
+if [ -d /usr/share/skyaware ] && [ ! -d $dumpdir ]; then
 
-sudo mkdir /usr/share/dump1090-fa/html/plots
+sudo mkdir /usr/share/skyaware/html/plots
 
 fi
 
