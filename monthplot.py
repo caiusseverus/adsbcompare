@@ -21,6 +21,15 @@ with open("/etc/default/graphs1090") as file:
             rrdloc = line.replace("DB=",'').rstrip()
             break
 
+# test if UAT data is present
+
+if os.path.isfile(os.path.join(rrdloc,"localhost/dump1090-localhost/dump1090_aircraft-recent_978.rrd")):
+    print("UAT")
+    UAT = True
+else:
+    print("No UAT")
+    UAT = False
+
 # get data from rrd databases
 
 print("Getting data...")
@@ -40,6 +49,14 @@ aircraft = io.StringIO(rrdaircraft.stdout.replace(':',''))
 rrdmlat = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/dump1090_mlat-recent.rrd AVERAGE -s "end-30d-23h45min" -e "23:30 yesterday" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
 mlat = io.StringIO(rrdmlat.stdout.replace(':',''))
 
+if UAT:
+    uatrrdmessages = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/dump1090_messages-messages_978.rrd AVERAGE -s "end-30d-23h45min" -e "23:30 yesterday" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
+    uatmessages = io.StringIO(uatrrdmessages.stdout.replace(':',''))
+
+    uatrrdaircraft = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/dump1090_aircraft-recent_978.rrd AVERAGE -s "end-30d-23h45min" -e "23:30 yesterday" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
+    uataircraft = io.StringIO(uatrrdaircraft.stdout.replace(':',''))
+
+
 print("Processing...")
 
 # import rrd data to dataframes
@@ -48,6 +65,10 @@ df_local = pd.read_csv(local_messages, parse_dates=[0], sep='\s+', date_parser=d
 df_range = pd.read_csv(range, parse_dates=[0], sep='\s+', date_parser=date_parser, index_col='DateTime', names=['DateTime', 'range'], header=None, skiprows=2)
 df_aircraft = pd.read_csv(aircraft, parse_dates=[0], sep='\s+', date_parser=date_parser, index_col='DateTime', names=['DateTime', 'total', 'positions'], header=None, skiprows=2)
 df_mlat = pd.read_csv(mlat, parse_dates=[0], sep='\s+', date_parser=date_parser, index_col='DateTime', names=['DateTime', 'mlat'], header=None, skiprows=2)
+
+if UAT:
+    df_uatmessages = pd.read_csv(uatmessages, parse_dates=[0], sep='\s+', date_parser=date_parser, index_col='DateTime', names=['DateTime', 'messages'], header=None, skiprows=2)
+    df_uataircraft = pd.read_csv(uataircraft, parse_dates=[0], sep='\s+', date_parser=date_parser, index_col='DateTime', names=['DateTime', 'total', 'positions'], header=None, skiprows=2)
 
 # sum remote and local messages
 
@@ -72,6 +93,10 @@ df_range = df_range.fillna(0)
 df_aircraft = df_aircraft.fillna(0)
 df_mlat = df_mlat.fillna(0)
 
+if UAT:
+    df_uatmessages = df_uatmessages.fillna(0)
+    df_uataircraft = df_uataircraft.fillna(0)
+
 # add date and time columns from index
 df_messages['date'] = df_messages.index.date
 df_messages['time'] = df_messages.index.time
@@ -82,11 +107,21 @@ df_aircraft['time'] = df_aircraft.index.time
 df_mlat['date'] = df_mlat.index.date
 df_mlat['time'] = df_mlat.index.time
 
+if UAT:
+    df_uatmessages['date'] = df_uatmessages.index.date
+    df_uatmessages['time'] = df_uatmessages.index.time
+    df_uataircraft['date'] = df_uataircraft.index.date
+    df_uataircraft['time'] = df_uataircraft.index.time
+
 # convert dataframe to wideformat for plotting
 messages_w = df_messages.pivot(index='date', columns='time', values='messages')
 range_w = df_range.pivot(index='date', columns='time', values='rangenm')
 aircraft_w = df_aircraft.pivot(index='date', columns='time', values='total')
 mlat_w = df_mlat.pivot(index='date', columns='time', values='mlat')
+
+if UAT:
+    uatmessages_w = df_uatmessages.pivot(index='date', columns='time', values='messages')
+    uataircraft_w = df_uataircraft.pivot(index='date', columns='time', values='total')
 
 print("Generating Plots...")
 
@@ -127,9 +162,28 @@ plt.xlabel("Time")
 plt.ylabel("Date")
 plt.savefig(os.path.join(outdir, filename), bbox_inches="tight")
 
+plt.clf()
+
+if UAT:
+    filename = 'uatmessages.png'
+    sns.heatmap(uatmessages_w, cmap='magma', cbar_kws={"shrink": 0.5})
+    plt.title("UAT-978 Messages")
+    plt.xlabel("Time")
+    plt.ylabel("Date")
+    plt.savefig(os.path.join(outdir, filename), bbox_inches="tight")
+
+    plt.clf()
+
+    filename = "uataircraft.png"
+    sns.heatmap(uataircraft_w, cmap='magma', cbar_kws={"shrink": 0.5})
+    plt.title("UAT-978 Aircraft")
+    plt.xlabel("Time")
+    plt.ylabel("Date")
+    plt.savefig(os.path.join(outdir, filename), bbox_inches="tight")
+
 # write basic webpage for easy access to plots.
 
-html = """
+htmlstart = """
 <!DOCTYPE html>
 <html>
 <style>
@@ -144,9 +198,20 @@ img {
 <img src="messages.png" alt="Messages">
 <img src="aircraft.png" alt="All aircraft">
 <img src="mlat.png" alt="MLAT Aircraft">
-<img src="range.png" alt="Range">
+"""
+
+htmluat = """<img src="uatmessages.png" alt="Messages">
+<img src="uataircraft.png" alt="All aircraft">
+"""
+
+htmlend = """<img src="range.png" alt="Range">
 </body>
 </html>"""
+
+if UAT:
+    html = htmlstart + htmluat + htmlend
+else:
+    html = htmlstart + htmlend
 
 file = open(os.path.join(outdir,"heatmaps.html"), "w")
 file.write(html)
