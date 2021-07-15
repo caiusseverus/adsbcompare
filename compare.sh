@@ -55,16 +55,18 @@ stats   '/tmp/first' using ($2+$3) name "MessagesA"
 stats   '/tmp/second' using ($2+$3) name "MessagesB"
 
 
-f(x) = a + b * tanh(x/c)
-a=1
-b=1
-c=1
+f(x) = a - b * exp(-c*x)
+
+a=3000
+b=3000
+c=0.01
+
 fit f(x) '/tmp/first' using ($4):($2+$3) via a,b,c
 
-g(x) = j + k * tanh(x/l)
-j=1
-k=1
-l=1
+g(x) = j - k * exp(-l*x)
+j=3000
+k=3000
+l=0.01
 fit g(x) '/tmp/second' using ($4):($2+$3) via j,k,l
 
 plot    '/tmp/first' using ($4):($2+$3) with points lt rgb "red" pt 7 title ARG1." to ".ARG2, [0:AircraftA_max] f(x) lt rgb "black" notitle, \
