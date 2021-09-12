@@ -5,6 +5,11 @@ All scripts here use gnuplot.
 ## compare.sh
 
 This script obtains data from the rrd database collected with [graphs1090](https://github.com/wiedehopf/graphs1090) by wiedehopf.
+Graphs1090 configuration `/etc/default/graphs1090` should be edited to enable daily export of data for creation of scatter plots:
+```
+# enable data collection for caius scatter graphs
+enable_scatter=yes
+```
 
 Usage is:
 ```
