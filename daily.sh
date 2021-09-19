@@ -294,10 +294,10 @@ set fit logfile '/tmp/fit'
 FIT_LIMIT = 1.e-10
 FIT_MAXITER = 10000
 
-f(x) = a + b * tanh(x/c)
+f(x) = a - b * exp(-c*x)
 a=3000
-b=5
-c=5
+b=3000
+c=0.01
 fit f(x) '/tmp/week' using ($4):($2+$3) via a,b,c
 
 stats '/tmp/week' using ($1/1852) name "Range" noout
