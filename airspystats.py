@@ -276,7 +276,7 @@ sns.boxplot(showmeans=True,
             showbox=False,
             showcaps=False,
             ax = ax)
-ax.set_label("Noise (dB)")
+ax.set_ylabel("Noise (dB)")
 ax.set_xlabel("Gain")
 plt.tight_layout()
 plt.savefig(os.path.join(outdir,filename))
