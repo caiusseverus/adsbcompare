@@ -3,9 +3,9 @@ import pandas as pd
 import csv, time
 
 if os.environ.get('DISPLAY') is None: # this variable will not be set when X Server is not running
- import matplotlib as  mplib
+    import matplotlib as  mplib
  # set a  different display back-end to squash the error
- mplib.use('Agg')
+    mplib.use('Agg')
 
 import matplotlib.pyplot as plt
 import seaborn as sns
