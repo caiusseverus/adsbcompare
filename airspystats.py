@@ -154,10 +154,6 @@ df_snrp5 = pd.read_csv(snrp5, parse_dates=[0], sep='\s+', date_parser=date_parse
 df_snrp95 = pd.read_csv(snrp95, parse_dates=[0], sep='\s+', date_parser=date_parser, index_col='DateTime', names=['DateTime', 'snrp95' ], header=None, skiprows=2)
 df_noisemin = pd.read_csv(noisemin, parse_dates=[0], sep='\s+', date_parser=date_parser, index_col='DateTime', names=['DateTime', 'noisemin' ], header=None, skiprows=2)
 
-# round gain to integers to allow use as categories
-
-df_gain.gain = df_gain.gain.round()
-
 # calculate range in nm and add column to dataframe
 
 df_range['rangenm'] = df_range['range'] / 1852
@@ -178,6 +174,14 @@ df_df21['df21rate'] = df_df21['df21']/60
 
 dfs = [df_messages, df_range, df_aircraft, df_gps, df_df0, df_df4, df_df5, df_df11, df_df16, df_df17, df_df18, df_df19, df_df20, df_df21, df_gain, df_preamble, df_snrmin, df_snrmax, df_snrmedian, df_snrq1, df_snrq3, df_snrp5, df_snrp95, df_noisemin]
 df_airspy = reduce(lambda left,right: pd.merge(left,right,on='DateTime'), dfs)
+
+# drop rows with missing data
+
+df_airspy.dropna(inplace=True)
+
+# round gain to integers to allow use as categories
+
+df_airspy['gain'] = df_gain.gain.round()
 
 # calculate snr range
 
@@ -239,7 +243,7 @@ plt.clf()
 
 filename = 'snrrange.png'
 f, ax = plt.subplots(figsize=(10,8))
-sns.stripplot(x="gain", y="snrrange", data=df_airspy, jitter=0.20, alpha=0.25)
+sns.stripplot(x="gain", y="snrrange", data=df_airspy, jitter=0.20, alpha=0.25, palette='Set1')
 sns.boxplot(showmeans=True,
             meanline=True,
             meanprops={'color': 'k', 'ls': '-', 'lw': 2},
