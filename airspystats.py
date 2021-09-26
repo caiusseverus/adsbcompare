@@ -154,22 +154,6 @@ df_snrp5 = pd.read_csv(snrp5, parse_dates=[0], sep='\s+', date_parser=date_parse
 df_snrp95 = pd.read_csv(snrp95, parse_dates=[0], sep='\s+', date_parser=date_parser, index_col='DateTime', names=['DateTime', 'snrp95' ], header=None, skiprows=2)
 df_noisemin = pd.read_csv(noisemin, parse_dates=[0], sep='\s+', date_parser=date_parser, index_col='DateTime', names=['DateTime', 'noisemin' ], header=None, skiprows=2)
 
-# calculate range in nm and add column to dataframe
-
-df_range['rangenm'] = df_range['range'] / 1852
-
-# calculate DF frames per second
-df_df0['df0rate'] = df_df0['df0']/60
-df_df4['df4rate'] = df_df4['df4']/60
-df_df5['df5rate'] = df_df5['df5']/60
-df_df11['df11rate'] = df_df11['df11']/60
-df_df16['df16rate'] = df_df16['df16']/60
-df_df17['df17rate'] = df_df17['df17']/60
-df_df18['df18rate'] = df_df18['df18']/60
-df_df19['df19rate'] = df_df19['df19']/60
-df_df20['df20rate'] = df_df20['df20']/60
-df_df21['df21rate'] = df_df21['df21']/60
-
 # merge dataframes
 
 dfs = [df_messages, df_range, df_aircraft, df_gps, df_df0, df_df4, df_df5, df_df11, df_df16, df_df17, df_df18, df_df19, df_df20, df_df21, df_gain, df_preamble, df_snrmin, df_snrmax, df_snrmedian, df_snrq1, df_snrq3, df_snrp5, df_snrp95, df_noisemin]
@@ -178,6 +162,22 @@ df_airspy = reduce(lambda left,right: pd.merge(left,right,on='DateTime'), dfs)
 # drop rows with missing data
 
 df_airspy.dropna(inplace=True)
+
+# calculate range in nm and add column to dataframe
+
+df_airspy['rangenm'] = df_airspy['range'] / 1852
+
+# calculate DF frames per second
+df_airspy['df0rate'] = df_airspy['df0']/60
+df_airspy['df4rate'] = df_airspy['df4']/60
+df_airspy['df5rate'] = df_airspy['df5']/60
+df_airspy['df11rate'] = df_airspy['df11']/60
+df_airspy['df16rate'] = df_airspy['df16']/60
+df_airspy['df17rate'] = df_airspy['df17']/60
+df_airspy['df18rate'] = df_airspy['df18']/60
+df_airspy['df19rate'] = df_airspy['df19']/60
+df_airspy['df20rate'] = df_airspy['df20']/60
+df_airspy['df21rate'] = df_airspy['df21']/60
 
 # round gain to integers to allow use as categories
 
