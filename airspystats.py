@@ -51,79 +51,79 @@ with open("/etc/default/graphs1090") as file:
 print("Getting data...")
 
 rrdmessages = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/dump1090_messages-remote_accepted.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-messages = io.StringIO(rrdmessages.stdout.replace(':',''))
+messages = io.StringIO(rrdmessages.stdout.replace(':','').replace(',','.'))
 
 rrdrange = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/dump1090_range-max_range.rrd MAX -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-range = io.StringIO(rrdrange.stdout.replace(':',''))
+range = io.StringIO(rrdrange.stdout.replace(':','').replace(',','.'))
 
 rrdaircraft = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/dump1090_aircraft-recent.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-aircraft = io.StringIO(rrdaircraft.stdout.replace(':',''))
+aircraft = io.StringIO(rrdaircraft.stdout.replace(':','').replace(',','.'))
 
 #rrdmlat = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/dump1090_mlat-recent.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-#mlat = io.StringIO(rrdmlat.stdout.replace(':',''))
+#mlat = io.StringIO(rrdmlat.stdout.replace(':','').replace(',','.'))
 
 rrdgps = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/dump1090_gps-recent.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-gps = io.StringIO(rrdgps.stdout.replace(':',''))
+gps = io.StringIO(rrdgps.stdout.replace(':','').replace(',','.'))
 
 rrddf0 = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/df_count_minute-0.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-df0 = io.StringIO(rrddf0.stdout.replace(':',''))
+df0 = io.StringIO(rrddf0.stdout.replace(':','').replace(',','.'))
 
 rrddf4 = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/df_count_minute-4.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-df4 = io.StringIO(rrddf4.stdout.replace(':',''))
+df4 = io.StringIO(rrddf4.stdout.replace(':','').replace(',','.'))
 
 rrddf5 = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/df_count_minute-5.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-df5 = io.StringIO(rrddf5.stdout.replace(':',''))
+df5 = io.StringIO(rrddf5.stdout.replace(':','').replace(',','.'))
 
 rrddf11 = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/df_count_minute-11.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-df11 = io.StringIO(rrddf11.stdout.replace(':',''))
+df11 = io.StringIO(rrddf11.stdout.replace(':','').replace(',','.'))
 
 rrddf16 = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/df_count_minute-16.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-df16 = io.StringIO(rrddf16.stdout.replace(':',''))
+df16 = io.StringIO(rrddf16.stdout.replace(':','').replace(',','.'))
 
 rrddf17 = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/df_count_minute-17.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-df17 = io.StringIO(rrddf17.stdout.replace(':',''))
+df17 = io.StringIO(rrddf17.stdout.replace(':','').replace(',','.'))
 
 rrddf18 = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/df_count_minute-18.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-df18 = io.StringIO(rrddf18.stdout.replace(':',''))
+df18 = io.StringIO(rrddf18.stdout.replace(':','').replace(',','.'))
 
 rrddf19 = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/df_count_minute-19.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-df19 = io.StringIO(rrddf19.stdout.replace(':',''))
+df19 = io.StringIO(rrddf19.stdout.replace(':','').replace(',','.'))
 
 rrddf20 = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/df_count_minute-20.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-df20 = io.StringIO(rrddf20.stdout.replace(':',''))
+df20 = io.StringIO(rrddf20.stdout.replace(':','').replace(',','.'))
 
 rrddf21 = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/df_count_minute-21.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-df21 = io.StringIO(rrddf21.stdout.replace(':',''))
+df21 = io.StringIO(rrddf21.stdout.replace(':','').replace(',','.'))
 
 rrdgain = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/airspy_misc-gain.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-gain = io.StringIO(rrdgain.stdout.replace(':',''))
+gain = io.StringIO(rrdgain.stdout.replace(':','').replace(',','.'))
 
 rrdpreamble = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/airspy_misc-preamble_filter.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-preamble = io.StringIO(rrdpreamble.stdout.replace(':',''))
+preamble = io.StringIO(rrdpreamble.stdout.replace(':','').replace(',','.'))
 
 rrdsnrmin = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/airspy_snr-min.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-snrmin = io.StringIO(rrdsnrmin.stdout.replace(':',''))
+snrmin = io.StringIO(rrdsnrmin.stdout.replace(':','').replace(',','.'))
 
 rrdsnrmax = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/airspy_snr-max.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-snrmax = io.StringIO(rrdsnrmax.stdout.replace(':',''))
+snrmax = io.StringIO(rrdsnrmax.stdout.replace(':','').replace(',','.'))
 
 rrdsnrmedian = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/airspy_snr-median.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-snrmedian = io.StringIO(rrdsnrmedian.stdout.replace(':',''))
+snrmedian = io.StringIO(rrdsnrmedian.stdout.replace(':','').replace(',','.'))
 
 rrdsnrq1 = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/airspy_snr-q1.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-snrq1 = io.StringIO(rrdsnrq1.stdout.replace(':',''))
+snrq1 = io.StringIO(rrdsnrq1.stdout.replace(':','').replace(',','.'))
 
 rrdsnrq3 = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/airspy_snr-q3.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-snrq3 = io.StringIO(rrdsnrq3.stdout.replace(':',''))
+snrq3 = io.StringIO(rrdsnrq3.stdout.replace(':','').replace(',','.'))
 
 rrdsnrp5 = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/airspy_snr-p5.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-snrp5 = io.StringIO(rrdsnrp5.stdout.replace(':',''))
+snrp5 = io.StringIO(rrdsnrp5.stdout.replace(':','').replace(',','.'))
 
 rrdsnrp95 = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/airspy_snr-p95.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-snrp95 = io.StringIO(rrdsnrp95.stdout.replace(':',''))
+snrp95 = io.StringIO(rrdsnrp95.stdout.replace(':','').replace(',','.'))
 
 rrdnoisemin = subprocess.run(['rrdtool fetch ./localhost/dump1090-localhost/airspy_noise-min.rrd AVERAGE -s "now-2d" -a'], cwd=rrdloc, capture_output=True, text=True, shell=True)
-noisemin = io.StringIO(rrdnoisemin.stdout.replace(':',''))
+noisemin = io.StringIO(rrdnoisemin.stdout.replace(':','').replace(',','.'))
 
 print("Processing...")
 
