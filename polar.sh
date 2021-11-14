@@ -635,7 +635,7 @@ EOF
 
 
 echo "Graphs available at :"
-echo "http://$pi/dump1090-fa/plots/"
+echo "http://$pi/skyaware/plots/"
 
 
 fi
