@@ -1,10 +1,19 @@
 #!/bin/bash
 
-#set range of plot
+date=$(date -I)
+PWD=$(pwd)
 
-range=230
+#set range of plot to 230nm if no value specified
+if [ ! $2 ]
+then
+  range=230
+else
+  range=$2
+fi
 
-echo "Plotting altidude heatmap for datafile $1"
+output=altmap-$(date -I)_$range.png
+
+echo "Plotting altitude heatmap for datafile $1 with range $range"
 
 nice -n 19 gnuplot -c /dev/stdin $1 $range <<"EOF"
 
@@ -44,7 +53,10 @@ plot '< sort -t"," -k4 -r '.data u ($6):($5/1852):($4) with dots lc palette
 EOF
 
 IP=$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
+sudo cp altmap.png $output
+sudo mv altmap.png /usr/share/skyaware/html/plots/altmap.png
+sudo mv $output $PWD/results/$date/$output
 
-sudo cp altmap.png /run/dump1090-fa/altmap.png
+echo "Plot available at http://$IP/skyaware/plots/$output"
 
-echo "Plot available at http://$IP/dump1090-fa/data/altmap.png"
+
