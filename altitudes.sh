@@ -57,6 +57,4 @@ sudo cp altmap.png $output
 sudo mv altmap.png /usr/share/skyaware/html/plots/altmap.png
 sudo mv $output $PWD/results/$date/$output
 
-echo "Plot available at http://$IP/skyaware/plots/$output"
-
-
+echo "Plot available at http://$IP/skyaware/plots/altmap.png"
