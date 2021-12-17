@@ -358,7 +358,7 @@ ap=$PWD/airports.csv
 
 if [ ! -f "$ap" ]; then
 
-curl https://ourairports.com/data/airports.csv | cut -d "," -f2,3,5,6,7,14 | tr -d '"' > $PWD/airports.csv
+curl https://davidmegginson.github.io/ourairports-data/airports.csv | cut -d "," -f2,3,5,6,7,14 | tr -d '"' > $PWD/airports.csv
 
 sed -i '1d' $PWD/airports.csv
 
