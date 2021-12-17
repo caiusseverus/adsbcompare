@@ -571,6 +571,19 @@ rm -r $TMPDIR
 rm -r $HWTDIR
 dumpdir=/usr/share/skyaware/html/plots
 
+if [[ ! -d "$PWD/results/$date" ]]; then
+   mkdir -p $PWD/results/$date
+   sudo mv polarheatmap-$date.png $PWD/results/$date/heatmap-$date.png
+   sudo mv polarheatmap_low-$date.png $PWD/results/$date/heatmap_low-$date.png
+   sudo mv polarheatmap_high-$date.png $PWD/results/$date/heatmap_high-$date.png
+   sudo mv elevation-$date.png $PWD/results/$date/elevation-$date.png
+   sudo mv altgraph-$date.png $PWD/results/$date/altgraph-$date.png
+   sudo mv closealt-$date.png $PWD/results/$date/closealt-$date.png
+   sudo mv closerange-$date.png $PWD/results/$date/closerange-$date.png
+   sudo mv lowmap-$date.png $PWD/results/$date/lowmap-$date.png
+   sudo mv mapol-$date.png $PWD/results/$date/mapol-$date.png
+fi
+
 if [ -d /usr/share/skyaware ] && [ ! -d $dumpdir ]; then
 
 sudo mkdir /usr/share/skyaware/html/plots
@@ -579,15 +592,15 @@ fi
 
 if [ -d "$dumpdir" ]; then
 
-sudo cp polarheatmap-$date.png $dumpdir/heatmap.png
-sudo cp polarheatmap_low-$date.png $dumpdir/heatmap_low.png
-sudo cp polarheatmap_high-$date.png $dumpdir/heatmap_high.png
-sudo cp elevation-$date.png $dumpdir/elevation.png
-sudo cp altgraph-$date.png $dumpdir/altgraph.png
-sudo cp closealt-$date.png $dumpdir/closealt.png
-sudo cp closerange-$date.png $dumpdir/closerange.png
-sudo cp lowmap-$date.png $dumpdir/lowmap.png
-sudo cp mapol-$date.png $dumpdir/mapol.png
+sudo cp $PWD/results/$date/heatmap-$date.png $dumpdir/heatmap.png
+sudo cp $PWD/results/$date/heatmap_low-$date.png $dumpdir/heatmap_low.png
+sudo cp $PWD/results/$date/heatmap_high-$date.png $dumpdir/heatmap_high.png
+sudo cp $PWD/results/$date/elevation-$date.png $dumpdir/elevation.png
+sudo cp $PWD/results/$date/altgraph-$date.png $dumpdir/altgraph.png
+sudo cp $PWD/results/$date/closealt-$date.png $dumpdir/closealt.png
+sudo cp $PWD/results/$date/closerange-$date.png $dumpdir/closerange.png
+sudo cp $PWD/results/$date/lowmap-$date.png $dumpdir/lowmap.png
+sudo cp $PWD/results/$date/mapol-$date.png $dumpdir/mapol.png
 
 date2=$(date +%T)
 
@@ -607,35 +620,42 @@ img {
     max-width:100%;
     height:auto;
 }
+body {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEYAAABGBAMAAACDAP+3AAAAGFBMVEUfHx8eHh4dHR0bGxshISEiIiIlJSUjIyM9IpsJAAAFjUlEQVR4AT3UuZLcOBaF4QuI2XJxboIhF/eQFe1WovoBAAqccpkaZpc5+4yrXa8/RGpx/lrIXPjFCYjTp9z8REqF4VYNWB3Av3zQJ6b6xBwlKB/9kRkCjXVwGH3ziK5UcjFHVkmgY6osiBsGDFfseqq2ZbTz7E00qBDpzOxnD7ToABeros1vM6MX0rBQaG1ith1A/HJkvkHxsPGJ82dP8vVCyWmbyPTaAfGzg40bgIdrv2f3pBVPycUcufx+BSUUWDuCZi6zBqdM50ElKYPODqtLDjc31rBb9CZ59lbN/JScuMxHLUBcGiy6QRH9zpwgZGhRj8qSydPVgNNVgbWqYX3HbM9K2rqTnKVmsmwKWzc1ffEd20+Zq3Ji65kl6TSjALNvzmJt4Pi2f1etytGJmy5erLAgbNY4bjykC3YCLIS3nSZMKgwRsBarWgjdeVzIEDzpTkoOUArTF4WFXYHwxY585sT0nmTYMxmXfs8fzwswfnam8TMU49bvqSRnyRPnqlno4tVQQiH2A9Za8tNTfXQ0lxbSxUaZna0uLlj9Q0XzD96CpsOZUftolINKBWJpAOoAJC0T6QqZnOtfvcfJFcDrD4Cuy5Hng316XrqzJ204HynyHwWed6i+XGF40Uw2T7Lc71HyssngEOrgONfBY7wvW0UZdVAma5xmSNjRp3xkvKJkW6aSg7PK4K0+mbKqYB0WYBgWwxCXiS74zBCVlEFpYQDEwjcA1qccb5yO6ZL8ozt/h3wHSCdWzLuqxU2ZZ9ev9MvRMbMvV9BQgN0qrFjlkzPQanI9nuaGCokVK2LV1Y2egyY1aFQGxjM9I7RBBAgyGEJtpKHP0lUySSeWCpyKHMT2pmM/vyP55u2Rw5lcSeabAfgiG5TPDX3uP3QvcoSipJXQByUCjS4C8VXqxEEZOJxzmJoyogFNJBRsCJs2XmoWWrWFqTsnbwtSn43gNFTTob9/SEpaPJNhUBKDGoZGCMINxvBv8vuKbb//lg/sK0wfPgBica/QsSk5F3KK4Ui6Yw+uv4+DWEOFbhdPOnbY5PLFpzrZMhakeqomY0Vz0TO+elQGTWdCk1IYFAOaoZg0IJQhT+YreXF+yia+O1cgtGufjXxQw28f85RPXfd15zv13ABoD15kB7FKJ/7pbHKP6+9TgNgkVj68NeV8Tp24f7OOndCgJzR3RNJBPNFReCmstMVqvjjzBoeK4GOFoBN32CPxu+4TwwBDa4DJTe/OU9c9ku7EGyfOVxh+fw9g/AATxPqKTEXJKEdCIBkB4iBUlO6MjUrWi6M5Kz31YAqFsYaCeB0KJC5d1+foo3LQWSfRaDrwdAQrMEC27yDZXJf7TlOJ2Bczr1di3OWvZB6XrvvqPuWJPDk9dAHgm7LvuZJTEdKqO3J3XgostArEnvkqgUznx3PX7cSzz1FXZyvakTA4XVVMbCPFPK1cFj66S0WoqQI1XG2uoU7CMPquO2VaUDJFQMdVgXKD2bpz6ufzzxXbxszHQ9fGO/F7A998yBQG6cShE+P+Pk7t1FwfF1QHN1Eui1VapRxCdj8tCtI1bog1Fo011Sx9u3o6c9bufI6wAT26Av9xJ+WWpTKbbBPp3K/1LbC4Vuhv396RCbJw4untjxVPndj+dIB9dVD8z2dylZ+6vMeJwbYChHJkvHV2J3fdHsJPASeHhrXq6QheXu1nBhUr5u6ryT0I13BFKD01ViZ/n3oaziRG7c6Ayg7g1LPeztNdT36ueMqcN4XGv3finjfv+7I/kMJ4d046MUanOA1QtMH1kLlfFasm99NiutSw63yNDeH4zeL1Uu8XKHNfcThPSSNwchGMbgUETScwkCcK77pH2jsgrAssvVyB8FLJ7GrmwyD8eVqsHoY/FwIv9T7lPu9+Yf8/9+w4nS1ma78AAAAASUVORK5CYII=)!important;
+    color:cornflowerblue;
+    font-family:monospace;
+}
 </style>
 <body>
 <h1>Heatmap plots created on $date at $date2 from $count samples.</h1>
 <h2>Plots include $mlatstat</h2>
-<p>Heatmap</p>
+<p><h3>Heatmap</h3></p>
 <img src="heatmap.png" alt="Heatmap">
-<p>Aircraft below $low feet</p>
+<p><h3>Aircraft below $low feet</h3></p>
 <img src="heatmap_low.png" alt="Low Altitude">
-<p>Aircraft above $high feet</p>
+<p><h3>Aircraft above $high feet</h3></p>
 <img src="heatmap_high.png" alt="High Altitude">
-<p>Azimuth/Elevation plot</p>
+<p><h3>Azimuth/Elevation plot</h3></p>
 <img src="elevation.png" alt="Elevation">
-<p>Range/Altitude</p>
+<p><h3>Range/Altitude</h3></p>
 <img src="altgraph.png" alt="Altitude">
-<p>Close Range Altitude</p>
+<p><h3>Close Range Altitude</h3></p>
 <img src="closealt.png" alt="Close Range">
-<p>Close Range</p>
+<p><h3>Close Range</h3></p>
 <img src="closerange.png" alt="Close Range">
-<p>Low altitude with map overlay</p>
+<p><h3>Low altitude with map overlay</h3></p>
 <img src="lowmap.png" alt="Map">
-<p>Plot with map overlay</p>
+<p><h3>Plot with map overlay</h3></p>
 <img src="mapol.png" alt="Map">
+<p><h3>Altitude Heatmap</h3></p>
+<img src="altmap.png" alt="Altitude Map">
 </body>
 </html>
 EOF
 
 
 echo "Graphs available at :"
-echo "http://$pi/dump1090-fa/plots/"
+echo "http://$pi/skyaware/plots/"
 
 
 fi
