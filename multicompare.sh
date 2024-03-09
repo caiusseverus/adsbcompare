@@ -24,7 +24,7 @@ endb=$(date -I --date=$startb+${durb}days)
 
 wc -l /tmp/second
 
-gnuplot -c /dev/stdin $starta $enda $startb $endb <<"EOF"
+gnuplot -c /dev/stdin $starta $enda $startb $endb $sshhosta $sshhostb <<"EOF"
 
 set terminal pngcairo enhanced size 1900,900 background rgb 'gray80'
 set output '/tmp/compare.png'
@@ -43,7 +43,7 @@ set ytics 100
 set mxtics
 set mytics
 set pointsize 0.5
-set title "Comparison of ".ARG1." to ".ARG2." and ".ARG3." to ".ARG4
+set title "Comparison of ".ARG1." to ".ARG2."(".ARG6.") and ".ARG3." to ".ARG4." (".ARG6.")"
 
 set fit prescale
 set fit logfile '/tmp/fit'
@@ -72,8 +72,8 @@ k=3000
 l=0.01
 fit g(x) '/tmp/second' using ($4):($2+$3) via j,k,l
 
-plot    '/tmp/first' using ($4):($2+$3) with points lt rgb "red" pt 7 title ARG1." to ".ARG2, [0:AircraftA_max] f(x) lt rgb "black" notitle, \
-        '/tmp/second' using ($4):($2+$3) with point lt rgb "blue" pt 7 title ARG3." to ".ARG4,  [0:AircraftB_max] g(x) lt rgb "black" notitle
+plot    '/tmp/first' using ($4):($2+$3) with points lt rgb "red" pt 7 title ARG1." to ".ARG2." (".ARG5.")", [0:AircraftA_max] f(x) lt rgb "black" notitle, \
+        '/tmp/second' using ($4):($2+$3) with point lt rgb "blue" pt 7 title ARG3." to ".ARG4." (".ARG6.")",  [0:AircraftB_max] g(x) lt rgb "black" notitle
 
 
 unset title
@@ -108,8 +108,8 @@ c2 = 1
 fit f(x) '/tmp/first' using ($4):($1/1852) via a1,b1,c1
 fit g(x) '/tmp/second' using ($4):($1/1852) via a2,b2,c2
 
-plot    '/tmp/first' using ($4):($1/1852) with points lt rgb "red" pt 7 title ARG1." to ".ARG2, f(x) lt rgb "black" notitle, \
-        '/tmp/second' using ($4):($1/1852) with points lt rgb "blue" pt 7 title ARG3." to ".ARG4, g(x) lt rgb "black" notitle
+plot    '/tmp/first' using ($4):($1/1852) with points lt rgb "red" pt 7 title ARG1." to ".ARG2." (".ARG5.")", f(x) lt rgb "black" notitle, \
+        '/tmp/second' using ($4):($1/1852) with points lt rgb "blue" pt 7 title ARG3." to ".ARG4." (".ARG6.")", g(x) lt rgb "black" notitle
 
 
 set xrange [*:*]
